@@ -3,7 +3,7 @@ import {bignumberToGwei, delay} from "./utils";
 import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
 import {BlockList} from "net";
-import {addBlockEntry, updateTimeFrameEntry} from "./mongo_connector";
+import {addBlockEntry, getLastBlockEntry, updateTimeFrameEntry} from "./mongo_connector";
 
 
 class ChainGasScannerStatus {
@@ -52,10 +52,8 @@ export class ChainGasScanner {
     workers : Array<Promise<void>> = [];
     getBlockWorker : Promise<void> | undefined = undefined;
 
-
     blockNumber : number = 0;
     blockTime : string = "";
-
 
     constructor(providerRpcAddress : string, fillMissingBlocks : boolean) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
@@ -65,13 +63,15 @@ export class ChainGasScanner {
 
     async getBlock() {
         try {
+            let blockNumber = -1;
             if (this.fillMissingBlocks) {
-
-            } else {
-                let blockNumber = await this.blockProvider.getBlockNumber();
+                blockNumber = await getLastBlockEntry();
             }
-            while (true) {
+            if (blockNumber <= 0) {
+                blockNumber = await this.blockProvider.getBlockNumber();
+            }
 
+            while (true) {
                 let blockPromise = this.blockProvider.getBlock(blockNumber);
                 let blockNumberPromise = this.blockProvider.getBlockNumber();
 

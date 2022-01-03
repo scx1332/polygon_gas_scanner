@@ -28,23 +28,30 @@ export async function connectToDatabase() {
     return client;
 }
 
-export async function getLastBlockEntry() {
+export async function getLastBlockEntry() : Promise<number> {
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.findOne({});
+        const result = await collections.blockInfoCollection.find().sort({blockNo:-1}).limit(1).toArray();
+        if (result.length == 1) {
+            return result[0].blockNo;
+        }
     }
-
+    return -1;
 }
 
 export async function addBlockEntry(entry : BlockStatistics) {
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.insertOne(entry);
+        const el =  await collections.blockInfoCollection.findOne({blockNo: entry.blockNo});
+        if (el == null) {
+            const result = await collections.blockInfoCollection.insertOne(entry);
+        } else {
+            const result = await collections.blockInfoCollection.replaceOne({_id: el._id}, entry);
+        }
     }
 }
 
 export async function updateTimeFrameEntry(entry : TimeFrameStatistics) {
     if (collections.timeFrameInfoCollection !== undefined) {
         const el =  await collections.timeFrameInfoCollection.findOne({name: entry.name});
-
         if (el == null) {
             const result = await collections.timeFrameInfoCollection.insertOne(entry);
         } else {
