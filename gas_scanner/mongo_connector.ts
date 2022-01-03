@@ -28,15 +28,28 @@ export async function connectToDatabase() {
     return client;
 }
 
+export async function getLastBlockEntry() {
+    if (collections.blockInfoCollection !== undefined) {
+        const result = await collections.blockInfoCollection.findOne({});
+    }
+
+}
+
 export async function addBlockEntry(entry : BlockStatistics) {
     if (collections.blockInfoCollection !== undefined) {
         const result = await collections.blockInfoCollection.insertOne(entry);
     }
 }
 
-export async function addTimeFrameEntry(entry : TimeFrameStatistics) {
+export async function updateTimeFrameEntry(entry : TimeFrameStatistics) {
     if (collections.timeFrameInfoCollection !== undefined) {
-        const result = await collections.timeFrameInfoCollection.insertOne(entry);
+        const el =  await collections.timeFrameInfoCollection.findOne({name: entry.name});
+
+        if (el == null) {
+            const result = await collections.timeFrameInfoCollection.insertOne(entry);
+        } else {
+            const result = await collections.timeFrameInfoCollection.replaceOne({_id: el._id}, entry);
+        }
     }
 }
 

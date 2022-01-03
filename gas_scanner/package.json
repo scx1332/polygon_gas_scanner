@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc",
-	    "run_gas_scanner": "ts-node gas_scanner_main.ts"
+	    "run_gas_scanner_development": "ts-node gas_scanner_main.ts --clearDatabase"
 	},
 	"keywords": [],
 	"author": "scx1332",

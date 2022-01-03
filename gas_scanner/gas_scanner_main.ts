@@ -8,11 +8,13 @@ import {clearDatabase, connectToDatabase} from "./mongo_connector";
 
 interface IGasScannerArguments{
     clearDatabase: boolean;
+    fillMissingBlocks: boolean;
     help?: boolean;
 }
 export const args = parse<IGasScannerArguments>(
     {
         clearDatabase: Boolean,
+        fillMissingBlocks: Boolean,
         help: { type: Boolean, optional: true, alias: 'h', description: 'Prints this usage guide' },
     },
     {
@@ -37,9 +39,9 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
         await clearDatabase();
     }
 
-    let p = new ChainGasScanner(PROVIDER_ADDRESS);
+    let p = new ChainGasScanner(PROVIDER_ADDRESS, args.fillMissingBlocks);
 
-    p.runWorkers();
+    await p.runWorkers();
 
     while (true) {
         await delay(100000);
