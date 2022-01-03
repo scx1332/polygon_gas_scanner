@@ -3,6 +3,7 @@ import {bignumberToGwei, delay} from "./utils";
 import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
 import {BlockList} from "net";
+import {addBlockEntry, addTimeFrameEntry} from "./mongo_connector";
 
 
 class ChainGasScannerStatus {
@@ -24,6 +25,16 @@ export class BlockStatistics {
     gasLimit = 0;
     transactionCount = 0;
     blockTime = "";
+}
+
+export class TimeFrameStatistics {
+    blockCount = 0;
+    minimumGasInBlock = 0;
+    gasUsed = 0;
+    gasLimit = 0;
+    transactionCount = 0;
+    firstBlockTime = "";
+    lastBlockTime = "";
 }
 
 export class ChainGasScanner {
@@ -85,6 +96,7 @@ export class ChainGasScanner {
                 blockInfo = new BlockStatistics();
                 blockInfo.gasLimit = block.gasLimit.toNumber();
                 blockInfo.transactionCount = block.transactions.length;
+                blockInfo.blockTime = new Date(block.timestamp * 1000).toISOString();
                 this.blockMap.set(blockNumber, blockInfo);
             }
 
@@ -110,8 +122,27 @@ export class ChainGasScanner {
                 let bi = this.blockMap.get(blockNumber - 1);
                 if (bi !== undefined) {
                     console.log(`Block no ${bi.blockNo}, minimum gas: ${bi.minimumGasInBlock}, gas used: ${bi.gasUsed}, gas limit: ${bi.gasLimit}, transaction count: ${bi.transactionCount}`);
+                    await addBlockEntry(bi);
                 }
             }
+
+
+            let tfs = new TimeFrameStatistics();
+            for (let blockNo = blockNumber - 10; blockNo < blockNumber; blockNo += 1) {
+                let bi = this.blockMap.get(blockNo);
+
+                if (bi !== undefined) {
+                    if (tfs.firstBlockTime == "") {
+                        tfs.firstBlockTime = bi.blockTime;
+                    }
+
+                    tfs.lastBlockTime = bi.blockTime;
+
+                }
+            }
+            await addTimeFrameEntry(tfs);
+
+
 
             this.chainScannerStatus.totalTransactionCount += nextBatch.length;
             this.transactionReceiptsBatch = nextBatch;
