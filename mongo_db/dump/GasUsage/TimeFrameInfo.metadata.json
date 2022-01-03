@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"b4031f56996747329f3decbfc30a7a0b","collectionName":"TimeFrameInfo","type":"collection"}
