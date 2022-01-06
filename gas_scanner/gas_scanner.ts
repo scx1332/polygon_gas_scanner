@@ -1,9 +1,9 @@
-import {TransactionReceipt} from "@ethersproject/abstract-provider";
-import {bignumberToGwei, delay} from "./utils";
+import { TransactionReceipt } from "@ethersproject/abstract-provider";
+import { bignumberToGwei, delay } from "./utils";
 import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
-import {BlockList} from "net";
-import {addBlockEntry, getLastBlockEntry, updateTimeFrameEntry} from "./mongo_connector";
+import { BlockList } from "net";
+import { addBlockEntry, getLastBlockEntry, updateTimeFrameEntry } from "./mongo_connector";
 
 
 class ChainGasScannerStatus {
@@ -41,21 +41,21 @@ export class TimeFrameStatistics {
 export class ChainGasScanner {
     blockMap = new Map<number, BlockStatistics>();
 
-    blockProvider : ethers.providers.JsonRpcBatchProvider;
-    transactionsProvider : ethers.providers.JsonRpcBatchProvider;
+    blockProvider: ethers.providers.JsonRpcBatchProvider;
+    transactionsProvider: ethers.providers.JsonRpcBatchProvider;
 
     chainScannerStatus = new ChainGasScannerStatus();
 
     transactionReceiptsBatch = new Array<Promise<TransactionReceipt>>();
 
-    workerProcessTransactions : Promise<void> | undefined = undefined;;
-    workerGetBlocks : Promise<void> | undefined = undefined;
+    workerProcessTransactions: Promise<void> | undefined = undefined;;
+    workerGetBlocks: Promise<void> | undefined = undefined;
 
     startingBlockNumber: number = 0;
-    blockNumber : number = 0;
-    blockTime : string = "";
+    blockNumber: number = 0;
+    blockTime: string = "";
 
-    constructor(providerRpcAddress : string, startingBlock : number) {
+    constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
     }
@@ -112,9 +112,9 @@ export class ChainGasScanner {
                 }
                 //good moment to store data in db;
 
-                const query = {name: this.chainScannerStatus.name};
-                const update = {$set: this.chainScannerStatus};
-                const options = {upsert: true};
+                const query = { name: this.chainScannerStatus.name };
+                const update = { $set: this.chainScannerStatus };
+                const options = { upsert: true };
 
                 //await this.mongoDBCollection.updateOne(query, update, options);
 
@@ -164,16 +164,15 @@ export class ChainGasScanner {
                 this.blockNumber += 1;
             }
         }
-        catch (ex)
-        {
+        catch (ex) {
             await delay(1000);
             console.error(ex);
         }
     }
 
-    processTransactionReceipt(transactionReceipt : TransactionReceipt) {
+    processTransactionReceipt(transactionReceipt: TransactionReceipt) {
         let transferCount = 0;
-        let addresses : { [address: string] : number } = {};
+        let addresses: { [address: string]: number } = {};
         //console.log("Gas price: " + transactionReceipt.effectiveGasPrice);
 
         let blockNumber = transactionReceipt.blockNumber;

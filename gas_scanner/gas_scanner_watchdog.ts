@@ -1,11 +1,11 @@
-import {clearDatabase, connectToDatabase, getLastBlockEntry, getTimeFrameEntry} from "./mongo_connector";
-import {ChildProcess, exec, spawn} from "child_process";
+import { clearDatabase, connectToDatabase, getLastBlockEntry, getTimeFrameEntry } from "./mongo_connector";
+import { ChildProcess, exec, spawn } from "child_process";
 
 import { Logger } from "tslog";
 import * as dotenv from "dotenv";
 import * as mongoDB from "mongodb";
 import * as Buffer from "buffer";
-import {delay} from "./utils";
+import { delay } from "./utils";
 
 const log: Logger = new Logger({ name: "WATCHDOG" });
 
@@ -23,25 +23,24 @@ class Watchdog {
 
     }
 
-    processClose(code:number) {
+    processClose(code: number) {
         console.log(`child process close all stdio with code: ${code}`);
         this.gas_scanner_process = undefined;
     }
-    processExit(code:number) {
+    processExit(code: number) {
         console.log(`Child process exited with code: ${code}`);
         this.gas_scanner_process = undefined;
     }
-    processStdOut(data:Buffer) {
+    processStdOut(data: Buffer) {
         console.log(data.toString());
     }
-    processStdErr(data:Buffer) {
+    processStdErr(data: Buffer) {
         console.log(data.toString());
     }
     startGasScannerProcess() {
         if (!this.gas_scanner_process) {
             let subprocess = spawn('ts-node', ['gas_scanner_main.ts'], { shell: true });
             subprocess.stdout.on('data', (data: Buffer) => this.processStdOut(data));
-
             subprocess.stderr.on('data', (data: Buffer) => this.processStdErr(data));
 
             subprocess.on('exit', (code: number) => this.processExit(code));

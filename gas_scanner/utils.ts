@@ -3,11 +3,11 @@
  * @param amount - Amount in big number
  * @param decimals - Has to be integer between 0 and 18 which informs how many decimals currency has
  */
-import {BigNumber} from "ethers";
+import { BigNumber } from "ethers";
 
 
 export function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function bignumberToGwei(bn: BigNumber) {

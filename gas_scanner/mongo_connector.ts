@@ -1,6 +1,6 @@
 import * as mongoDB from "mongodb";
-import {BlockList} from "net";
-import {BlockStatistics, TimeFrameStatistics} from "./gas_scanner";
+import { BlockList } from "net";
+import { BlockStatistics, TimeFrameStatistics } from "./gas_scanner";
 
 
 export const collections: {
@@ -9,7 +9,7 @@ export const collections: {
 } = {}
 
 
-export async function connectToDatabase() : Promise<mongoDB.MongoClient> {
+export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     if (process.env.MONGO_DB_CONNECTION_STRING === undefined) {
         throw "process.env.MONGO_DB_CONNECTION_STRING not found";
     }
@@ -28,9 +28,9 @@ export async function connectToDatabase() : Promise<mongoDB.MongoClient> {
     return client;
 }
 
-export async function getLastBlockEntry() : Promise<number> {
+export async function getLastBlockEntry(): Promise<number> {
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.find().sort({blockNo:-1}).limit(1).toArray();
+        const result = await collections.blockInfoCollection.find().sort({ blockNo: -1 }).limit(1).toArray();
         if (result.length == 1) {
             return result[0].blockNo;
         }
@@ -38,32 +38,32 @@ export async function getLastBlockEntry() : Promise<number> {
     return -1;
 }
 
-export async function addBlockEntry(entry : BlockStatistics) {
+export async function addBlockEntry(entry: BlockStatistics) {
     if (collections.blockInfoCollection !== undefined) {
-        const el =  await collections.blockInfoCollection.findOne({blockNo: entry.blockNo});
+        const el = await collections.blockInfoCollection.findOne({ blockNo: entry.blockNo });
         if (el == null) {
             const result = await collections.blockInfoCollection.insertOne(entry);
         } else {
-            const result = await collections.blockInfoCollection.replaceOne({_id: el._id}, entry);
+            const result = await collections.blockInfoCollection.replaceOne({ _id: el._id }, entry);
         }
     }
 }
 
-export async function getTimeFrameEntry(name:string) : Promise<TimeFrameStatistics> {
+export async function getTimeFrameEntry(name: string): Promise<TimeFrameStatistics> {
     if (collections.timeFrameInfoCollection !== undefined) {
-        const el = await collections.timeFrameInfoCollection.findOne({name: name});
+        const el = await collections.timeFrameInfoCollection.findOne({ name: name });
         return Object.assign(new TimeFrameStatistics(), el);
     }
     throw "collections.timeFrameInfoCollection undefined";
 }
 
-export async function updateTimeFrameEntry(entry : TimeFrameStatistics) {
+export async function updateTimeFrameEntry(entry: TimeFrameStatistics) {
     if (collections.timeFrameInfoCollection !== undefined) {
-        const el =  await collections.timeFrameInfoCollection.findOne({name: entry.name});
+        const el = await collections.timeFrameInfoCollection.findOne({ name: entry.name });
         if (el == null) {
             const result = await collections.timeFrameInfoCollection.insertOne(entry);
         } else {
-            const result = await collections.timeFrameInfoCollection.replaceOne({_id: el._id}, entry);
+            const result = await collections.timeFrameInfoCollection.replaceOne({ _id: el._id }, entry);
         }
     }
 }
