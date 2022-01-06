@@ -39,7 +39,8 @@ class Watchdog {
     }
     startGasScannerProcess() {
         if (!this.gas_scanner_process) {
-            let subprocess = spawn('ts-node', ['gas_scanner_main.ts'], { shell: true });
+            let useShell = (process.platform == "win32");
+            let subprocess = spawn('ts-node', ['gas_scanner_main.ts'], { shell: useShell });
             subprocess.stdout.on('data', (data: Buffer) => this.processStdOut(data));
             subprocess.stderr.on('data', (data: Buffer) => this.processStdErr(data));
 
@@ -57,6 +58,10 @@ class Watchdog {
                 log.info(`taskkill /pid ${this.gas_scanner_process?.pid} /t /f`);
                 spawn("taskkill", ["/pid", this.gas_scanner_process?.pid.toString(), '/t', '/f'], { shell: true });
             }
+            await delay(2000);
+        }
+        else {
+            this.gas_scanner_process?.kill();
             await delay(2000);
         }
         if (this.gas_scanner_process) {
