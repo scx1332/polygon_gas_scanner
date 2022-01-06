@@ -43,47 +43,45 @@ export class ChainGasScanner {
 
     blockProvider : ethers.providers.JsonRpcBatchProvider;
     transactionsProvider : ethers.providers.JsonRpcBatchProvider;
-    fillMissingBlocks: boolean;
 
     chainScannerStatus = new ChainGasScannerStatus();
 
     transactionReceiptsBatch = new Array<Promise<TransactionReceipt>>();
 
-    workers : Array<Promise<void>> = [];
-    getBlockWorker : Promise<void> | undefined = undefined;
+    workerProcessTransactions : Promise<void> | undefined = undefined;;
+    workerGetBlocks : Promise<void> | undefined = undefined;
 
+    startingBlockNumber: number = 0;
     blockNumber : number = 0;
     blockTime : string = "";
 
-    constructor(providerRpcAddress : string, fillMissingBlocks : boolean) {
+    constructor(providerRpcAddress : string, startingBlock : number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
-        this.fillMissingBlocks = fillMissingBlocks;
     }
 
-    async getBlock() {
+    async getBlocksWorker() {
         try {
-            let blockNumber = -1;
-            if (this.fillMissingBlocks) {
-                blockNumber = await getLastBlockEntry();
-            }
-            if (blockNumber <= 0) {
-                blockNumber = await this.blockProvider.getBlockNumber();
+            this.blockNumber = this.startingBlockNumber;
+
+            if (this.blockNumber <= 0) {
+                this.blockNumber = await this.blockProvider.getBlockNumber();
             }
 
+
             while (true) {
-                let blockPromise = this.blockProvider.getBlock(blockNumber);
+                let blockPromise = this.blockProvider.getBlock(this.blockNumber);
                 let blockNumberPromise = this.blockProvider.getBlockNumber();
 
                 let block = await blockPromise;
                 let blockNumberFromNetwork = await blockNumberPromise;
 
                 if (blockNumberFromNetwork > blockNumber) {
-                    console.warn(`Scanner is late ${blockNumberFromNetwork - blockNumber} blocks`);
+                    console.warn(`Scanner is late ${blockNumberFromNetwork - this.blockNumber} blocks`);
                 }
                 this.chainScannerStatus.currentBlock = blockNumberFromNetwork;
-                this.chainScannerStatus.processedBlock = blockNumber;
-                this.chainScannerStatus.lateBlocks = blockNumberFromNetwork - blockNumber;
+                this.chainScannerStatus.processedBlock = this.blockNumber;
+                this.chainScannerStatus.lateBlocks = blockNumberFromNetwork - this.blockNumber;
                 if (this.chainScannerStatus.lateBlocks > this.chainScannerStatus.maxLateBlocks) {
                     this.chainScannerStatus.maxLateBlocks = this.chainScannerStatus.lateBlocks;
                 }
@@ -98,13 +96,13 @@ export class ChainGasScanner {
                 this.blockTime = new Date(block.timestamp * 1000).toISOString();
                 this.blockNumber = block.number;
 
-                let blockInfo = this.blockMap.get(blockNumber);
+                let blockInfo = this.blockMap.get(this.blockNumber);
                 if (blockInfo === undefined) {
                     blockInfo = new BlockStatistics();
                     blockInfo.gasLimit = block.gasLimit.toNumber();
                     blockInfo.transactionCount = block.transactions.length;
                     blockInfo.blockTime = new Date(block.timestamp * 1000).toISOString();
-                    this.blockMap.set(blockNumber, blockInfo);
+                    this.blockMap.set(this.blockNumber, blockInfo);
                 }
 
                 let nextBatch = new Array<Promise<TransactionReceipt>>();
@@ -126,7 +124,7 @@ export class ChainGasScanner {
                 }
 
                 {
-                    let bi = this.blockMap.get(blockNumber - 1);
+                    let bi = this.blockMap.get(this.blockNumber - 1);
                     if (bi !== undefined) {
                         console.log(`Block no ${bi.blockNo}, minimum gas: ${bi.minimumGasInBlock}, gas used: ${bi.gasUsed}, gas limit: ${bi.gasLimit}, transaction count: ${bi.transactionCount}`);
                         await addBlockEntry(bi);
@@ -136,7 +134,7 @@ export class ChainGasScanner {
 
                 let tfs = new TimeFrameStatistics();
                 tfs.name = "last_10_block";
-                for (let blockNo = blockNumber - 10; blockNo < blockNumber; blockNo += 1) {
+                for (let blockNo = this.blockNumber - 10; blockNo < this.blockNumber; blockNo += 1) {
                     let bi = this.blockMap.get(blockNo);
 
 
@@ -163,7 +161,7 @@ export class ChainGasScanner {
                 this.chainScannerStatus.totalTransactionCount += nextBatch.length;
                 this.transactionReceiptsBatch = nextBatch;
 
-                blockNumber += 1;
+                this.blockNumber += 1;
             }
         }
         catch (ex)
@@ -242,10 +240,8 @@ export class ChainGasScanner {
     }
 
     async runWorkers() {
-        for (let i = 0; i < 1; i++) {
-            this.workers.push(this.processTransactions());
-        }
-        this.getBlockWorker = this.getBlock();
+        this.workerProcessTransactions = this.processTransactions();
+        this.workerGetBlocks = this.getBlocksWorker();
     }
 
 }

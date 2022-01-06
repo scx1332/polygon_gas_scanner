@@ -2,19 +2,21 @@ import {ChainGasScanner} from "./gas_scanner";
 import {delay} from "./utils";
 import * as dotenv from 'dotenv';
 import { parse } from 'ts-command-line-args';
-import {clearDatabase, connectToDatabase} from "./mongo_connector";
+import {clearDatabase, connectToDatabase, getLastBlockEntry} from "./mongo_connector";
 
 //load config from .env
 
 interface IGasScannerArguments{
     clearDatabase: boolean;
     fillMissingBlocks: boolean;
+    forceStartingBlockNumber: Number;
     help?: boolean;
 }
 export const args = parse<IGasScannerArguments>(
     {
         clearDatabase: Boolean,
         fillMissingBlocks: Boolean,
+        forceStartingBlockNumber: Number,
         help: { type: Boolean, optional: true, alias: 'h', description: 'Prints this usage guide' },
     },
     {
@@ -39,7 +41,13 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
         await clearDatabase();
     }
 
-    let p = new ChainGasScanner(PROVIDER_ADDRESS, args.fillMissingBlocks);
+    let startingBlockNumber = -1;
+
+    if (args.fillMissingBlocks) {
+        startingBlockNumber = await getLastBlockEntry();
+    }
+
+    let p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
 
     await p.runWorkers();
 

@@ -19,6 +19,7 @@
 		"decimal.js-light": "^2.5.1",
 		"ethers": "^5.5.1",
 		"ethers-multicall": "^0.2.1",
+
 		"express": "^4.17.1",
 		"http2-wrapper": "^2.1.9",
 		"jackson-js": "^1.1.0",
