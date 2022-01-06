@@ -7,8 +7,9 @@ RUN n stable
 RUN npm install -g typescript
 RUN npm install -g ts-node
 
-COPY build /gas_scanner
+COPY gas_scanner /gas_scanner
 WORKDIR /gas_scanner
 RUN npm install
 
 COPY mongo_db /mongo_db
+
