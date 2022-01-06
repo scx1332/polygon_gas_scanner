@@ -9,14 +9,14 @@ import {clearDatabase, connectToDatabase, getLastBlockEntry} from "./mongo_conne
 interface IGasScannerArguments{
     clearDatabase: boolean;
     fillMissingBlocks: boolean;
-    forceStartingBlockNumber: Number;
+    forceStartingBlockNumber?: Number;
     help?: boolean;
 }
 export const args = parse<IGasScannerArguments>(
     {
         clearDatabase: Boolean,
         fillMissingBlocks: Boolean,
-        forceStartingBlockNumber: Number,
+        forceStartingBlockNumber: { type: Number, optional: true },
         help: { type: Boolean, optional: true, alias: 'h', description: 'Prints this usage guide' },
     },
     {

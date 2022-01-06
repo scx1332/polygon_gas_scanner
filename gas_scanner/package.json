@@ -6,7 +6,8 @@
 	"scripts": {
 		"build": "tsc",
 		"run_gas_scanner_production": "ts-node gas_scanner_main.ts --fillMissingBlocks",
-		"run_gas_scanner_development": "ts-node gas_scanner_main.ts --clearDatabase"
+		"run_gas_scanner_development": "ts-node gas_scanner_main.ts --clearDatabase",
+	  	"run_watchdog_development": "ts-node gas_scanner_watchdog.ts"
 	},
 	"keywords": [],
 	"author": "scx1332",
@@ -19,7 +20,6 @@
 		"decimal.js-light": "^2.5.1",
 		"ethers": "^5.5.1",
 		"ethers-multicall": "^0.2.1",
-
 		"express": "^4.17.1",
 		"http2-wrapper": "^2.1.9",
 		"jackson-js": "^1.1.0",
@@ -33,7 +33,9 @@
 		"toformat": "^2.0.0",
 		"tsdx": "^0.12.3",
 		"ts-command-line-args": "^2.2.0",
-		"dotenv": "^10.0.0"
+		"dotenv": "^10.0.0",
+	  	"child_process": "^1.0.2",
+	  	"tslog": "^3.3.1"
 	},
 	"devDependencies": {
 		"@types/big.js": "^4.0.5",

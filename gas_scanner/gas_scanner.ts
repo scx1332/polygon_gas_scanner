@@ -76,7 +76,7 @@ export class ChainGasScanner {
                 let block = await blockPromise;
                 let blockNumberFromNetwork = await blockNumberPromise;
 
-                if (blockNumberFromNetwork > blockNumber) {
+                if (blockNumberFromNetwork > this.blockNumber) {
                     console.warn(`Scanner is late ${blockNumberFromNetwork - this.blockNumber} blocks`);
                 }
                 this.chainScannerStatus.currentBlock = blockNumberFromNetwork;

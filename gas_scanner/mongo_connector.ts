@@ -9,7 +9,7 @@ export const collections: {
 } = {}
 
 
-export async function connectToDatabase() {
+export async function connectToDatabase() : Promise<mongoDB.MongoClient> {
     if (process.env.MONGO_DB_CONNECTION_STRING === undefined) {
         throw "process.env.MONGO_DB_CONNECTION_STRING not found";
     }
@@ -47,6 +47,14 @@ export async function addBlockEntry(entry : BlockStatistics) {
             const result = await collections.blockInfoCollection.replaceOne({_id: el._id}, entry);
         }
     }
+}
+
+export async function getTimeFrameEntry(name:string) : Promise<TimeFrameStatistics> {
+    if (collections.timeFrameInfoCollection !== undefined) {
+        const el = await collections.timeFrameInfoCollection.findOne({name: name});
+        return Object.assign(new TimeFrameStatistics(), el);
+    }
+    throw "collections.timeFrameInfoCollection undefined";
 }
 
 export async function updateTimeFrameEntry(entry : TimeFrameStatistics) {
