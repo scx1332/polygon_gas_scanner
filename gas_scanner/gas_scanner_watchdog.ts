@@ -19,11 +19,13 @@ class Watchdog {
     after_kill_delay_ms: number;
     after_start_delay: number;
     allowed_seconds_behind: number;
+    check_every_ms: number;
 
-    constructor(after_kill_delay_ms: number, after_start_delay: number, allowed_seconds_behind: number) {
+    constructor(after_kill_delay_ms: number, after_start_delay: number, allowed_seconds_behind: number, check_every_ms: number) {
         this.after_kill_delay_ms = after_kill_delay_ms;
         this.after_start_delay = after_start_delay;
         this.allowed_seconds_behind = allowed_seconds_behind;
+        this.check_every_ms = check_every_ms;
 
         log.debug("Watchdog created: " + JSON.stringify(this));
     }
@@ -51,6 +53,7 @@ class Watchdog {
                 throw "set env WATCHDOG_START_COMMAND";
             }
             let command_string = process.env.WATCHDOG_START_COMMAND.trim().replace("  ", " ");
+            log.info("Starting command: " + command_string);
             let command_arr = command_string.split(" ");
             if (command_arr.length < 1) {
                 throw "set env WATCHDOG_START_COMMAND"
@@ -70,7 +73,7 @@ class Watchdog {
     }
 
     async killProcess() {
-        log.info("Killing process...");
+        log.warn("Killing process...");
         if (process.platform == "win32") {
             if (this.gas_scanner_process?.pid) {
                 log.info(`taskkill /pid ${this.gas_scanner_process?.pid} /t /f`);
@@ -80,45 +83,36 @@ class Watchdog {
         else {
             this.gas_scanner_process?.kill();
         }
+        log.warn("Waiting for process to kill...");
         await delay(this.after_kill_delay_ms);
         if (this.gas_scanner_process) {
             throw "Failed to kill process";
         }
-        log.info("Process successfully terminated");
+        log.warn("Process successfully terminated");
     }
 
     async monitorGasScannerProcess() {
-        if (!this.gas_scanner_process) {
-            this.startGasScannerProcess();
-        }
-
         while (true) {
-            while (true) {
-                let tfe = await getTimeFrameEntry("last_10_block");
-                log.debug("Received object " + JSON.stringify(tfe));
-
-                await delay(1500);
-
-                let dt = Date.parse(tfe.lastBlockTime);
-                let dtNow = Date.now();
-
-                let differenceInSeconds = (dtNow - dt) / 1000.0;
-
-                if (differenceInSeconds > this.allowed_seconds_behind) {
-                    break;
-                }
-
-                log.debug(`Last update is ${differenceInSeconds} seconds old`);
-            }
-
-            try {
-                await this.killProcess();
+            if (!this.gas_scanner_process) {
                 await this.startGasScannerProcess();
+                log.info("Waiting after process started...")
                 await delay(this.after_start_delay);
-            } catch (ex) {
-                log.error("Failed to kill process, exiting");
-                throw "Failed to kill process, exiting";
             }
+            let tfe = await getTimeFrameEntry("last_10_block");
+            log.debug("Received object " + JSON.stringify(tfe));
+
+            await delay(this.check_every_ms);
+
+            let dt = Date.parse(tfe.lastBlockTime);
+            let dtNow = Date.now();
+
+            let differenceInSeconds = (dtNow - dt) / 1000.0;
+
+            if (differenceInSeconds > this.allowed_seconds_behind) {
+                await this.killProcess();
+            }
+
+            log.debug(`Last update is ${differenceInSeconds} seconds old`);
         }
 
     }
@@ -126,12 +120,13 @@ class Watchdog {
 
 
 async function main() {
-    let client = await connectToDatabase();
+    await connectToDatabase();
     let after_kill_delay_ms = parseInt(process.env.WATCHDOG_AFTER_KILL_DELAY_MS ?? "2000");
     let after_start_delay = parseInt(process.env.WATCHDOG_AFTER_START_DELAY_MS  ?? "30000");
     let allowed_seconds_behind = parseInt(process.env.WATCHDOG_ALLOWED_SECONDS_BEHIND ?? "60");
+    let check_every_ms = parseInt(process.env.WATCHDOG_CHECK_EVERY_MS ?? "1500");
 
-    let watchdog = new Watchdog(after_kill_delay_ms, after_start_delay, allowed_seconds_behind);
+    let watchdog = new Watchdog(after_kill_delay_ms, after_start_delay, allowed_seconds_behind, check_every_ms);
     await watchdog.monitorGasScannerProcess();
 }
 
