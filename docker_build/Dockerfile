@@ -8,5 +8,5 @@ WORKDIR /gas_scanner
 RUN npm install
 RUN tsc
 
-
+ENTRYPOINT node dist/gas_scanner_watchdog.js
 

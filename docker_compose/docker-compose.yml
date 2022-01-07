@@ -11,6 +11,17 @@ services:
       PROVIDER_ADDRESS: https://bor.golem.network
       MONGO_DB_CONNECTION_STRING: mongodb://mongodb_container:27017
       MONGO_DB_NAME: GasUsage
+      
+      WATCHDOG_START_SERVER: node dist/gas_scanner_server.js
+      WATCHDOG_START_COMMAND: node dist/gas_scanner_main.js
+      WATCHDOG_AFTER_KILL_DELAY_MS: 5000
+      WATCHDOG_AFTER_START_DELAY_MS: 15000
+      WATCHDOG_ALLOWED_SECONDS_BEHIND: 20
+      WATCHDOG_CHECK_EVERY_MS: 2500      
+      
+      SERVER_LISTEN_PORT: 7888
+    ports:
+      - "8899:7888"
     tty: true
 
 volumes:
