@@ -16,6 +16,7 @@ let client: mongoDB.MongoClient | undefined;
 
 class Watchdog {
     gas_scanner_process?: ChildProcess;
+    gas_server_process?: ChildProcess;
     after_kill_delay_ms: number;
     after_start_delay: number;
     allowed_seconds_behind: number;
@@ -45,6 +46,28 @@ class Watchdog {
         console.log(data.toString().trimEnd());
     }
 
+    startServerProcess() {
+        if (!this.gas_server_process && process.env.WATCHDOG_START_SERVER) {
+            let useShell = (process.platform == "win32");
+            let command_string = process.env.WATCHDOG_START_SERVER.trim().replace("  ", " ");
+            log.info("Starting command: " + command_string);
+            let command_arr = command_string.split(" ");
+            if (command_arr.length < 1) {
+                throw "set env WATCHDOG_START_COMMAND"
+            }
+            let command = command_arr[0];
+            let args = command_arr.slice(1);
+            let subprocess = spawn(command, args, { shell: useShell });
+
+            subprocess.stdout?.on('data', (data: Buffer) => this.processStdOut(data));
+            subprocess.stderr?.on('data', (data: Buffer) => this.processStdErr(data));
+
+            subprocess.on('exit', (code: number) => this.processExit(code));
+            subprocess.on('close', (code: number) => this.processClose(code));
+
+            this.gas_server_process = subprocess;
+        }
+    }
 
     startGasScannerProcess() {
         if (!this.gas_scanner_process) {
@@ -97,6 +120,7 @@ class Watchdog {
                 await this.startGasScannerProcess();
                 log.info("Waiting after process started...")
                 await delay(this.after_start_delay);
+                await this.startServerProcess();
             }
             let tfe = await getTimeFrameEntry("last_10_block");
             log.debug("Received object " + JSON.stringify(tfe));
