@@ -34,6 +34,7 @@ export class TimeFrameStatistics {
     name = "";
     blockCount = 0;
     minGas = 0;
+    maxMinGas = 0;
     gasUsed = 0;
     gasLimit = 0;
     transCount = 0;
@@ -43,6 +44,7 @@ export class TimeFrameStatistics {
 
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
+    gasPricesMap = new Map<number, Array<number>>();
 
     blockProvider: ethers.providers.JsonRpcBatchProvider;
     transactionsProvider: ethers.providers.JsonRpcBatchProvider;
@@ -63,6 +65,36 @@ export class ChainGasScanner {
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
     }
 
+    computeTimeFrameStatistics(name : string, blockCount : number) : TimeFrameStatistics {
+        let tfs = new TimeFrameStatistics();
+        tfs.name = name;
+        for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {
+            let bi = this.blockMap.get(blockNo);
+
+            if (bi !== undefined) {
+                if (tfs.firstBlockTime == "") {
+                    tfs.firstBlockTime = bi.blockTime;
+                }
+                tfs.lastBlockTime = bi.blockTime;
+                tfs.blockCount += 1;
+                if (bi.transCount != 0) {
+                    tfs.transCount += bi.transCount;
+                    if (tfs.minGas == 0.0) {
+                        tfs.minGas = bi.minGas;
+                    }
+                    if (bi.minGas < tfs.minGas) {
+                        tfs.minGas = bi.minGas;
+                    }
+                    if (bi.minGas > tfs.maxMinGas) {
+                        tfs.maxMinGas = bi.minGas;
+                    }
+                }
+            }
+        }
+        return tfs;
+    }
+
+
     async getBlocksWorker() {
         try {
             this.blockNumber = this.startingBlockNumber;
@@ -73,6 +105,17 @@ export class ChainGasScanner {
 
 
             while (true) {
+                for (let blockNum of this.gasPricesMap.keys()) {
+                    if (blockNum < this.blockNumber - 10) {
+                        this.gasPricesMap.delete(blockNum);
+                    }
+                }
+                for (let blockNum of this.blockMap.keys()) {
+                    if (blockNum < this.blockNumber - 1200) {
+                        this.blockMap.delete(blockNum);
+                    }
+                }
+
                 let blockPromise = this.blockProvider.getBlock(this.blockNumber);
                 let blockNumberPromise = this.blockProvider.getBlockNumber();
 
@@ -135,31 +178,14 @@ export class ChainGasScanner {
                 }
 
 
-                let tfs = new TimeFrameStatistics();
-                tfs.name = "last_10_block";
-                for (let blockNo = this.blockNumber - 10; blockNo < this.blockNumber; blockNo += 1) {
-                    let bi = this.blockMap.get(blockNo);
+                let tfs10 = this.computeTimeFrameStatistics("last_10_block", 10);
+                await updateTimeFrameEntry(tfs10);
 
+                let tfs100 = this.computeTimeFrameStatistics("last_100_block", 100);
+                await updateTimeFrameEntry(tfs100);
 
-                    if (bi !== undefined) {
-                        if (tfs.firstBlockTime == "") {
-                            tfs.firstBlockTime = bi.blockTime;
-                        }
-                        tfs.lastBlockTime = bi.blockTime;
-                        tfs.blockCount += 1;
-                        if (bi.transCount != 0) {
-                            tfs.transCount += bi.transCount;
-                            if (tfs.minGas == 0.0) {
-                                tfs.minGas = bi.minGas;
-                            }
-                            if (bi.minGas < tfs.minGas) {
-                                tfs.minGas = bi.minGas;
-                            }
-                        }
-                    }
-                }
-                await updateTimeFrameEntry(tfs);
-
+                let tfs1000 = this.computeTimeFrameStatistics("last_1000_block", 1000);
+                await updateTimeFrameEntry(tfs1000);
 
                 this.chainScannerStatus.totalTransactionCount += nextBatch.length;
                 this.transactionReceiptsBatch = nextBatch;
@@ -185,8 +211,16 @@ export class ChainGasScanner {
             blockInfo = new BlockInfo();
             this.blockMap.set(blockNumber, blockInfo);
         }
+        let gasPricesArray = this.gasPricesMap.get(blockNumber);
+        if (gasPricesArray === undefined) {
+            gasPricesArray = new Array<number>();
+            this.gasPricesMap.set(blockNumber, gasPricesArray);
+        }
+
+        let effectiveGasPrice = bignumberToGwei(transactionReceipt.effectiveGasPrice);
+        gasPricesArray.push(effectiveGasPrice);
         if (blockInfo.minGas == 0.0) {
-            blockInfo.minGas = bignumberToGwei(transactionReceipt.effectiveGasPrice);
+            blockInfo.minGas = effectiveGasPrice;
         }
         blockInfo.minGas = Math.min(blockInfo.minGas, bignumberToGwei(transactionReceipt.effectiveGasPrice));
         blockInfo.blockNo = transactionReceipt.blockNumber;
