@@ -13,8 +13,6 @@ dotenv.config();
 
 let client: mongoDB.MongoClient | undefined;
 
-
-
 class Watchdog {
     gas_scanner_process?: ChildProcess;
     mark_for_restart: boolean = false;
@@ -32,17 +30,30 @@ class Watchdog {
         this.gas_scanner_process = undefined;
     }
     processStdOut(data: Buffer) {
-        console.log(data.toString());
+        console.log(data.toString().trimEnd());
     }
     processStdErr(data: Buffer) {
-        console.log(data.toString());
+        console.log(data.toString().trimEnd());
     }
+
+
     startGasScannerProcess() {
         if (!this.gas_scanner_process) {
             let useShell = (process.platform == "win32");
-            let subprocess = spawn('ts-node', ['gas_scanner_main.ts'], { shell: useShell });
-            subprocess.stdout.on('data', (data: Buffer) => this.processStdOut(data));
-            subprocess.stderr.on('data', (data: Buffer) => this.processStdErr(data));
+            if (!process.env.WATCHDOG_START_COMMAND) {
+                throw "set env WATCHDOG_START_COMMAND";
+            }
+            let command_string = process.env.WATCHDOG_START_COMMAND.trim().replace("  ", " ");
+            let command_arr = command_string.split(" ");
+            if (command_arr.length < 1) {
+                throw "set env WATCHDOG_START_COMMAND"
+            }
+            let command = command_arr[0];
+            let args = command_arr.slice(1);
+            let subprocess = spawn(command, args, { shell: useShell });
+
+            subprocess.stdout?.on('data', (data: Buffer) => this.processStdOut(data));
+            subprocess.stderr?.on('data', (data: Buffer) => this.processStdErr(data));
 
             subprocess.on('exit', (code: number) => this.processExit(code));
             subprocess.on('close', (code: number) => this.processClose(code));
@@ -87,7 +98,7 @@ class Watchdog {
 
                 let differenceInSeconds = (dtNow - dt) / 1000.0;
 
-                if (differenceInSeconds > 5) {
+                if (differenceInSeconds > 60) {
                     this.mark_for_restart = true;
                     await delay(10000);
                     break;

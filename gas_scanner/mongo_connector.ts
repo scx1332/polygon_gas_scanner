@@ -1,6 +1,6 @@
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import { BlockStatistics, TimeFrameStatistics } from "./gas_scanner";
+import { BlockInfo, TimeFrameStatistics } from "./gas_scanner";
 
 
 export const collections: {
@@ -38,7 +38,7 @@ export async function getLastBlockEntry(): Promise<number> {
     return -1;
 }
 
-export async function addBlockEntry(entry: BlockStatistics) {
+export async function addBlockEntry(entry: BlockInfo) {
     if (collections.blockInfoCollection !== undefined) {
         const el = await collections.blockInfoCollection.findOne({ blockNo: entry.blockNo });
         if (el == null) {

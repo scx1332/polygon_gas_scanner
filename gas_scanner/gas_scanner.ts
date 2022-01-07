@@ -5,6 +5,7 @@ import * as mongoDB from "mongodb";
 import { BlockList } from "net";
 import { addBlockEntry, getLastBlockEntry, updateTimeFrameEntry } from "./mongo_connector";
 
+const CURRENT_BLOCK_INFO_VERSION = 2;
 
 class ChainGasScannerStatus {
     name = "MainScanner_" + new Date().toISOString();
@@ -18,28 +19,30 @@ class ChainGasScannerStatus {
     lastUpdate = new Date().toISOString();
 }
 
-export class BlockStatistics {
+//keep names short to improve performance on MongoDB
+export class BlockInfo {
     blockNo = 0;
-    minimumGasInBlock = 0;
+    minGas = 0;
     gasUsed = 0;
     gasLimit = 0;
-    transactionCount = 0;
+    transCount = 0;
     blockTime = "";
+    blockVer = CURRENT_BLOCK_INFO_VERSION;
 }
 
 export class TimeFrameStatistics {
     name = "";
     blockCount = 0;
-    minimumGasInBlock = 0;
+    minGas = 0;
     gasUsed = 0;
     gasLimit = 0;
-    transactionCount = 0;
+    transCount = 0;
     firstBlockTime = "";
     lastBlockTime = "";
 }
 
 export class ChainGasScanner {
-    blockMap = new Map<number, BlockStatistics>();
+    blockMap = new Map<number, BlockInfo>();
 
     blockProvider: ethers.providers.JsonRpcBatchProvider;
     transactionsProvider: ethers.providers.JsonRpcBatchProvider;
@@ -98,9 +101,9 @@ export class ChainGasScanner {
 
                 let blockInfo = this.blockMap.get(this.blockNumber);
                 if (blockInfo === undefined) {
-                    blockInfo = new BlockStatistics();
+                    blockInfo = new BlockInfo();
                     blockInfo.gasLimit = block.gasLimit.toNumber();
-                    blockInfo.transactionCount = block.transactions.length;
+                    blockInfo.transCount = block.transactions.length;
                     blockInfo.blockTime = new Date(block.timestamp * 1000).toISOString();
                     this.blockMap.set(this.blockNumber, blockInfo);
                 }
@@ -126,7 +129,7 @@ export class ChainGasScanner {
                 {
                     let bi = this.blockMap.get(this.blockNumber - 1);
                     if (bi !== undefined) {
-                        console.log(`Block no ${bi.blockNo}, minimum gas: ${bi.minimumGasInBlock}, gas used: ${bi.gasUsed}, gas limit: ${bi.gasLimit}, transaction count: ${bi.transactionCount}`);
+                        console.log(`Block no ${bi.blockNo}, minimum gas: ${bi.minGas}, gas used: ${bi.gasUsed}, gas limit: ${bi.gasLimit}, transaction count: ${bi.transCount}`);
                         await addBlockEntry(bi);
                     }
                 }
@@ -144,13 +147,13 @@ export class ChainGasScanner {
                         }
                         tfs.lastBlockTime = bi.blockTime;
                         tfs.blockCount += 1;
-                        if (bi.transactionCount != 0) {
-                            tfs.transactionCount += bi.transactionCount;
-                            if (tfs.minimumGasInBlock == 0.0) {
-                                tfs.minimumGasInBlock = bi.minimumGasInBlock;
+                        if (bi.transCount != 0) {
+                            tfs.transCount += bi.transCount;
+                            if (tfs.minGas == 0.0) {
+                                tfs.minGas = bi.minGas;
                             }
-                            if (bi.minimumGasInBlock < tfs.minimumGasInBlock) {
-                                tfs.minimumGasInBlock = bi.minimumGasInBlock;
+                            if (bi.minGas < tfs.minGas) {
+                                tfs.minGas = bi.minGas;
                             }
                         }
                     }
@@ -179,13 +182,13 @@ export class ChainGasScanner {
 
         let blockInfo = this.blockMap.get(blockNumber);
         if (blockInfo === undefined) {
-            blockInfo = new BlockStatistics();
+            blockInfo = new BlockInfo();
             this.blockMap.set(blockNumber, blockInfo);
         }
-        if (blockInfo.minimumGasInBlock == 0.0) {
-            blockInfo.minimumGasInBlock = bignumberToGwei(transactionReceipt.effectiveGasPrice);
+        if (blockInfo.minGas == 0.0) {
+            blockInfo.minGas = bignumberToGwei(transactionReceipt.effectiveGasPrice);
         }
-        blockInfo.minimumGasInBlock = Math.min(blockInfo.minimumGasInBlock, bignumberToGwei(transactionReceipt.effectiveGasPrice));
+        blockInfo.minGas = Math.min(blockInfo.minGas, bignumberToGwei(transactionReceipt.effectiveGasPrice));
         blockInfo.blockNo = transactionReceipt.blockNumber;
         blockInfo.gasUsed += transactionReceipt.gasUsed.toNumber();
 
