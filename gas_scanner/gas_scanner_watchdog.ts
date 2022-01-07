@@ -13,12 +13,19 @@ dotenv.config();
 
 let client: mongoDB.MongoClient | undefined;
 
+
 class Watchdog {
     gas_scanner_process?: ChildProcess;
-    mark_for_restart: boolean = false;
+    after_kill_delay_ms: number;
+    after_start_delay: number;
+    allowed_seconds_behind: number;
 
-    constructor() {
+    constructor(after_kill_delay_ms: number, after_start_delay: number, allowed_seconds_behind: number) {
+        this.after_kill_delay_ms = after_kill_delay_ms;
+        this.after_start_delay = after_start_delay;
+        this.allowed_seconds_behind = allowed_seconds_behind;
 
+        log.debug("Watchdog created: " + JSON.stringify(this));
     }
 
     processClose(code: number) {
@@ -69,12 +76,11 @@ class Watchdog {
                 log.info(`taskkill /pid ${this.gas_scanner_process?.pid} /t /f`);
                 spawn("taskkill", ["/pid", this.gas_scanner_process?.pid.toString(), '/t', '/f'], { shell: true });
             }
-            await delay(2000);
         }
         else {
             this.gas_scanner_process?.kill();
-            await delay(2000);
         }
+        await delay(this.after_kill_delay_ms);
         if (this.gas_scanner_process) {
             throw "Failed to kill process";
         }
@@ -98,9 +104,7 @@ class Watchdog {
 
                 let differenceInSeconds = (dtNow - dt) / 1000.0;
 
-                if (differenceInSeconds > 60) {
-                    this.mark_for_restart = true;
-                    await delay(10000);
+                if (differenceInSeconds > this.allowed_seconds_behind) {
                     break;
                 }
 
@@ -108,12 +112,12 @@ class Watchdog {
             }
 
             try {
-                if (this.mark_for_restart) {
-                    await this.killProcess();
-                    await this.startGasScannerProcess();
-                }
+                await this.killProcess();
+                await this.startGasScannerProcess();
+                await delay(this.after_start_delay);
             } catch (ex) {
-                log.error("Failed to kill process");
+                log.error("Failed to kill process, exiting");
+                throw "Failed to kill process, exiting";
             }
         }
 
@@ -123,10 +127,12 @@ class Watchdog {
 
 async function main() {
     let client = await connectToDatabase();
+    let after_kill_delay_ms = parseInt(process.env.WATCHDOG_AFTER_KILL_DELAY_MS ?? "2000");
+    let after_start_delay = parseInt(process.env.WATCHDOG_AFTER_START_DELAY_MS  ?? "30000");
+    let allowed_seconds_behind = parseInt(process.env.WATCHDOG_ALLOWED_SECONDS_BEHIND ?? "60");
 
-    let watchdog = new Watchdog();
+    let watchdog = new Watchdog(after_kill_delay_ms, after_start_delay, allowed_seconds_behind);
     await watchdog.monitorGasScannerProcess();
-
 }
 
 main()
