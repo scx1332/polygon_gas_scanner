@@ -7,8 +7,8 @@
 		"build": "tsc",
 		"run_gas_scanner_production": "ts-node gas_scanner_main.ts --fillMissingBlocks",
 		"run_gas_scanner_development": "ts-node gas_scanner_main.ts --clearDatabase",
-	  	"run_watchdog_development": "ts-node gas_scanner_watchdog.ts",
-	    "run_server": "ts-node gas_scanner_server.ts"
+		"run_watchdog_development": "ts-node gas_scanner_watchdog.ts",
+		"run_server": "ts-node gas_scanner_server.ts"
 	},
 	"keywords": [],
 	"author": "scx1332",
@@ -35,8 +35,8 @@
 		"tsdx": "^0.12.3",
 		"ts-command-line-args": "^2.2.0",
 		"dotenv": "^10.0.0",
-	  	"child_process": "^1.0.2",
-	  	"tslog": "^3.3.1"
+		"child_process": "^1.0.2",
+		"tslog": "^3.3.1"
 	},
 	"devDependencies": {
 		"@types/big.js": "^4.0.5",

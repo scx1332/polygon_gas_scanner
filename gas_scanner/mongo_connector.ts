@@ -1,11 +1,12 @@
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import { BlockInfo, TimeFrameStatistics } from "./gas_scanner";
+import {BlockInfo, MinGasBlocksHistogram, TimeFrameStatistics} from "./gas_scanner";
 
 
 export const collections: {
     blockInfoCollection?: mongoDB.Collection,
-    timeFrameInfoCollection?: mongoDB.Collection
+    timeFrameInfoCollection?: mongoDB.Collection,
+    histogramCollection?: mongoDB.Collection
 } = {}
 
 
@@ -24,6 +25,7 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
 
     collections.blockInfoCollection = db.collection("BlockInfo");
     collections.timeFrameInfoCollection = db.collection("TimeFrameInfo");
+    collections.histogramCollection = db.collection("Histograms");
 
     return client;
 }
@@ -55,6 +57,25 @@ export async function getTimeFrameEntry(name: string): Promise<TimeFrameStatisti
         return Object.assign(new TimeFrameStatistics(), el);
     }
     throw "collections.timeFrameInfoCollection undefined";
+}
+
+export async function getHistEntry(name: string): Promise<MinGasBlocksHistogram> {
+    if (collections.histogramCollection !== undefined) {
+        const el = await collections.histogramCollection.findOne({ name: name });
+        return Object.assign(new MinGasBlocksHistogram(), el);
+    }
+    throw "collections.timeFrameInfoCollection undefined";
+}
+
+export async function updateHistEntry(entry: MinGasBlocksHistogram) {
+    if (collections.histogramCollection !== undefined) {
+        const el = await collections.histogramCollection.findOne({ name: entry.name });
+        if (el == null) {
+            const result = await collections.histogramCollection.insertOne(entry);
+        } else {
+            const result = await collections.histogramCollection.replaceOne({ _id: el._id }, entry);
+        }
+    }
 }
 
 export async function updateTimeFrameEntry(entry: TimeFrameStatistics) {

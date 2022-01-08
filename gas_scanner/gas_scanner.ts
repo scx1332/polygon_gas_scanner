@@ -3,7 +3,7 @@ import { bignumberToGwei, delay } from "./utils";
 import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import { addBlockEntry, getLastBlockEntry, updateTimeFrameEntry } from "./mongo_connector";
+import {addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry} from "./mongo_connector";
 
 const CURRENT_BLOCK_INFO_VERSION = 2;
 
@@ -42,6 +42,13 @@ export class TimeFrameStatistics {
     lastBlockTime = "";
 }
 
+export class MinGasBlocksHistogram {
+    name = "";
+    blockNums = Array<number>();
+    minGas = Array<number>();
+}
+
+
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
     gasPricesMap = new Map<number, Array<number>>();
@@ -63,6 +70,19 @@ export class ChainGasScanner {
     constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
+    }
+
+    computeBlockHistogram(name: string, blockCount : number) : MinGasBlocksHistogram {
+        let mgh = new MinGasBlocksHistogram();
+        mgh.name = name;
+        for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {
+            let bi = this.blockMap.get(blockNo);
+            if (bi !== undefined) {
+                mgh.blockNums.push(bi.blockNo);
+                mgh.minGas.push(bi.minGas);
+            }
+        }
+        return mgh;
     }
 
     computeTimeFrameStatistics(name : string, blockCount : number) : TimeFrameStatistics {
@@ -177,6 +197,8 @@ export class ChainGasScanner {
                     }
                 }
 
+                let mgh10 = this.computeBlockHistogram("hist_10_block", 10);
+                await updateHistEntry(mgh10);
 
                 let tfs10 = this.computeTimeFrameStatistics("last_10_block", 10);
                 await updateTimeFrameEntry(tfs10);
