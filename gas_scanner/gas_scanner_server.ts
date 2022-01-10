@@ -133,7 +133,6 @@ app.get('/polygon/gas-info/waiting_times', async (req, res) => {
                         max_block_wait = wait_time;
                     }
                     wait_time = 0;
-                    break;
                 }
                 wait_time += 1;
             }
