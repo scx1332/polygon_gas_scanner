@@ -89,6 +89,27 @@ app.get('/polygon/gas-info/current', async (req, res) => {
     }
 })
 
+app.get('/polygon/block-info/list', async (req, res) => {
+    try {
+        //let num = await getLastBlockEntry();
+
+        //@ts-ignore
+        let block_count = parseInt(req.query.block_count);
+        //@ts-ignore
+        let block_start = parseInt(req.query.block_start);
+
+
+        let blocks = await getBlockEntriesInRange(block_start, block_start + block_count);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(blocks));
+
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
+
+
 app.get('/polygon/gas-info/waiting_times', async (req, res) => {
     try {
         let num = await getLastBlockEntry();
