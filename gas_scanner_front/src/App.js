@@ -1,4 +1,6 @@
 import React from 'react';
+import {GasChart} from "./components/GasChart";
+import "./App.css";
 import { useEffect, useState } from "react"
 import {
   Chart as ChartJS,
@@ -28,7 +30,7 @@ export const options = {
     },
     title: {
       display: true,
-      text: 'Chart.js Bar Chart',
+      text: 'GasChart.js Bar Chart',
     },
   },
 };
@@ -47,28 +49,9 @@ const defaultData = {
 export class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      seconds: parseInt(props.startTimeInSeconds, 10) || 0,
-      chartData: defaultData
-    };
   }
 
-  async fetchPrices() {
-    const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
-    //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
-    const data = await res.json();
-    console.log(data);
-    return {
-          labels: data.blockNums,
-          datasets: [{
-            label: "Min gas",
-            data: data.minGas,
-            backgroundColor: 'rgba(255, 99, 132, 0.5)',
-          }]
-        };
-  }
-
-
+  /*
   async tick() {
     let chartData = await this.fetchPrices();
     console.log(chartData);
@@ -76,14 +59,14 @@ export class App extends React.Component {
       seconds: state.seconds + 2,
       chartData: chartData
     }));
-  }
+  }*/
 
   componentDidMount() {
-    this.interval = setInterval(async () => await this.tick(), 2000);
+//    this.interval = setInterval(async () => await this.tick(), 2000);
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
+  //  clearInterval(this.interval);
   }
 
   formatTime(secs) {
@@ -98,14 +81,12 @@ export class App extends React.Component {
 
   render() {
     return (
-        <div>
-          <div>
-            Timer: {this.formatTime(this.state.seconds)}
+        <div className="background">
+          <div className="title">
+            <div>PolygonGas</div>
           </div>
-          <div>
-            <Bar options={{animation: {
-                duration: 0
-              }}} data={this.state.chartData}/>
+          <div className="current-gas-chart">
+            <GasChart></GasChart>
           </div>
         </div>
 

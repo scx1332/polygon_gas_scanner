@@ -67,3 +67,24 @@ div.scrollControl {
   overflow-y: auto;
   height: 100%;
 }
+
+div.title {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 100px;
+  font-size: 2em;
+}
+div.current-gas-chart {
+  background-color: white;
+  margin: 10px;
+  padding: 20px;
+  position: absolute;
+  width: 800px;
+  right: 0px;
+  top: 200px;
+}
+div.background {
+  margin: 10px;
+  position: relative;
+}
