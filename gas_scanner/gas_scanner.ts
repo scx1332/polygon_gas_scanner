@@ -70,6 +70,7 @@ export class ChainGasScanner {
     constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
+        this.startingBlockNumber = startingBlock;
     }
 
     computeBlockHistogram(name: string, blockCount : number) : MinGasBlocksHistogram {
