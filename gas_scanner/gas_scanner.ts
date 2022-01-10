@@ -218,15 +218,16 @@ export class ChainGasScanner {
         }
 
         let effectiveGasPrice = bignumberToGwei(transactionReceipt.effectiveGasPrice);
-        gasPricesArray.push(effectiveGasPrice);
-        if (blockInfo.minGas == 0.0) {
-            blockInfo.minGas = effectiveGasPrice;
+        //if gas price is lower than 1 gwei then it is special transaction (propably with zero gas)
+        if (effectiveGasPrice >= 1.0) {
+            gasPricesArray.push(effectiveGasPrice);
+            if (blockInfo.minGas == 0.0) {
+                blockInfo.minGas = effectiveGasPrice;
+            }
+            blockInfo.minGas = Math.min(blockInfo.minGas, bignumberToGwei(transactionReceipt.effectiveGasPrice));
         }
-        blockInfo.minGas = Math.min(blockInfo.minGas, bignumberToGwei(transactionReceipt.effectiveGasPrice));
         blockInfo.blockNo = transactionReceipt.blockNumber;
         blockInfo.gasUsed += transactionReceipt.gasUsed.toNumber();
-
-
 
         /*for (let log of transactionReceipt.logs) {
             try {
