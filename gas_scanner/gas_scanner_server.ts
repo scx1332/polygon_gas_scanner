@@ -128,7 +128,7 @@ app.get('/polygon/gas-info/waiting_times', async (req, res) => {
             let max_block_wait = -1;
             let wait_time = 0;
             for (let block of blocks) {
-                if (block.minGas <= value) {
+                if (block.minGas >= 1.0 && block.minGas <= value) {
                     if (wait_time > max_block_wait) {
                         max_block_wait = wait_time;
                     }
