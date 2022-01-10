@@ -146,7 +146,7 @@ class Watchdog {
 async function main() {
     await connectToDatabase();
     let after_kill_delay_ms = parseInt(process.env.WATCHDOG_AFTER_KILL_DELAY_MS ?? "2000");
-    let after_start_delay = parseInt(process.env.WATCHDOG_AFTER_START_DELAY_MS  ?? "30000");
+    let after_start_delay = parseInt(process.env.WATCHDOG_AFTER_START_DELAY_MS ?? "30000");
     let allowed_seconds_behind = parseInt(process.env.WATCHDOG_ALLOWED_SECONDS_BEHIND ?? "60");
     let check_every_ms = parseInt(process.env.WATCHDOG_CHECK_EVERY_MS ?? "1500");
 

@@ -3,7 +3,7 @@ import { bignumberToGwei, delay } from "./utils";
 import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import {addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry} from "./mongo_connector";
+import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./mongo_connector";
 
 const CURRENT_BLOCK_INFO_VERSION = 2;
 
@@ -60,7 +60,7 @@ export class ChainGasScanner {
 
     transactionReceiptsBatch = new Array<Promise<TransactionReceipt>>();
 
-    workerProcessTransactions: Promise<void> | undefined = undefined;;
+    workerProcessTransactions: Promise<void> | undefined = undefined;
     workerGetBlocks: Promise<void> | undefined = undefined;
 
     startingBlockNumber: number = 0;
@@ -73,7 +73,7 @@ export class ChainGasScanner {
         this.startingBlockNumber = startingBlock;
     }
 
-    computeBlockHistogram(name: string, blockCount : number) : MinGasBlocksHistogram {
+    computeBlockHistogram(name: string, blockCount: number): MinGasBlocksHistogram {
         let mgh = new MinGasBlocksHistogram();
         mgh.name = name;
         for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {
@@ -86,7 +86,7 @@ export class ChainGasScanner {
         return mgh;
     }
 
-    computeTimeFrameStatistics(name : string, blockCount : number) : TimeFrameStatistics {
+    computeTimeFrameStatistics(name: string, blockCount: number): TimeFrameStatistics {
         let tfs = new TimeFrameStatistics();
         tfs.name = name;
         for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {

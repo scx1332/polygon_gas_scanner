@@ -13,8 +13,8 @@ const app = express();
 
 dotenv.config();
 
-function replacer(key:any, value:any):any {
-    if(value instanceof Map) {
+function replacer(key: any, value: any): any {
+    if (value instanceof Map) {
         return {
             dataType: 'Map',
             value: Array.from(value.entries()), // or with spread: value: [...value]
@@ -24,8 +24,8 @@ function replacer(key:any, value:any):any {
     }
 }
 
-function reviver(key:any, value:any):any {
-    if(typeof value === 'object' && value !== null) {
+function reviver(key: any, value: any): any {
+    if (typeof value === 'object' && value !== null) {
         if (value.dataType === 'Map') {
             return new Map(value.value);
         }
@@ -66,7 +66,7 @@ app.get('/polygon/gas-info/current', async (req, res) => {
             gasInfo.cached = new Date(Date.now()).toISOString();
             gasInfo.updated = tfe.lastBlockTime;
             let lastUpdatedMsAgo = Date.now() - Date.parse(tfe.lastBlockTime);
-            if (lastUpdatedMsAgo > 60000){
+            if (lastUpdatedMsAgo > 60000) {
                 gasInfo.health = "Info outdated " + (lastUpdatedMsAgo / 1000.0).toFixed(0) + " seconds";
             } else {
                 gasInfo.health = "OK";
@@ -122,7 +122,7 @@ app.get('/polygon/gas-info/waiting_times', async (req, res) => {
 
         res.setHeader('Content-Type', 'application/json');
         //res.end(JSON.stringify(blocks));
-        res.end(JSON.stringify({"block_analyzed": blocks.length, "waiting_times": Object.fromEntries(waiting_times)}));
+        res.end(JSON.stringify({ "block_analyzed": blocks.length, "waiting_times": Object.fromEntries(waiting_times) }));
 
     } catch (ex) {
         res.sendStatus(404);
