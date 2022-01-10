@@ -7,9 +7,11 @@ import {
     getTimeFrameEntry
 } from "./mongo_connector";
 import * as dotenv from "dotenv";
+let cors = require("cors");
 
 
 const app = express();
+app.use(cors());
 
 dotenv.config();
 

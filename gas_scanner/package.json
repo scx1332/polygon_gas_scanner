@@ -36,7 +36,8 @@
 		"ts-command-line-args": "^2.2.0",
 		"dotenv": "^10.0.0",
 		"child_process": "^1.0.2",
-		"tslog": "^3.3.1"
+		"tslog": "^3.3.1",
+		"cors": "^2.8.5"
 	},
 	"devDependencies": {
 		"@types/big.js": "^4.0.5",
