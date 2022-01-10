@@ -1,5 +1,5 @@
 import express from 'express';
-import {connectToDatabase, getTimeFrameEntry} from "./mongo_connector";
+import {connectToDatabase, getHistEntry, getTimeFrameEntry} from "./mongo_connector";
 import * as dotenv from "dotenv";
 
 const app = express();
@@ -56,6 +56,18 @@ app.get('/polygon/gas-info/current', async (req, res) => {
         }
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(cachedGasInfo));
+
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
+
+
+app.get('/polygon/gas-info/hist10', async (req, res) => {
+    try {
+        let he = await getHistEntry("hist_10_block");
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(he));
 
     } catch (ex) {
         res.sendStatus(404);
