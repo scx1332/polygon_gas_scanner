@@ -149,6 +149,44 @@ app.get('/polygon/gas-info/waiting_times', async (req, res) => {
     }
 })
 
+app.get('/polygon/gas-info/waiting_times_avg', async (req, res) => {
+    try {
+        let num = await getLastBlockEntry();
+
+        //@ts-ignore
+        let block_count = parseInt(req.query.block_count);
+        //@ts-ignore
+        let block_start = parseInt(req.query.block_start);
+
+
+        let blocks = await getBlockEntriesInRange(block_start, block_start + block_count);
+
+        let waiting_times = new Map<string, number>();
+
+        for (let value = 30.00; value < 31.0; value += 0.01) {
+            let sum_block_wait = 0;
+            let sum_block_wait_norm = 0;
+            let wait_time = 0;
+            for (let block of blocks) {
+                if (block.minGas >= 1.0 && block.minGas <= value) {
+                    sum_block_wait += wait_time * wait_time / 2.0;
+                    wait_time = 0;
+                }
+                wait_time += 1;
+                sum_block_wait_norm += 1;
+            }
+            waiting_times.set(value.toFixed(3), sum_block_wait / sum_block_wait_norm);
+        }
+
+
+        res.setHeader('Content-Type', 'application/json');
+        //res.end(JSON.stringify(blocks));
+        res.end(JSON.stringify({ "block_analyzed": blocks.length, "waiting_times": Object.fromEntries(waiting_times) }));
+
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
 
 app.get('/polygon/gas-info/hist10', async (req, res) => {
     try {
