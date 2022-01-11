@@ -35,7 +35,7 @@ export class BlockListProvider {
     }
 
     async fetchLastBlocks() {
-        const res = await fetch("http://localhost:7888/polygon/block-info/last-blocks?block_count=10");
+        const res = await fetch("http://localhost:7888/polygon/block-info/last-blocks?block_count=30");
         //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
         let json_result = await res.json();
         return json_result;
@@ -45,6 +45,8 @@ export class BlockListProvider {
         let blockData = await this.fetchLastBlocks();
         console.log("Block list provider: " + blockData);
         if (Array.isArray(blockData)) {
+            blockData.sort((firstEl, secondEl) => firstEl.blockNo - secondEl.blockNo );
+
             this.notify(blockData);
         }
     }

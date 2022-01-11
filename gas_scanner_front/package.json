@@ -12,7 +12,8 @@
     "web-vitals": "^2.1.2",
     "chart.js": "^3.7.0",
     "react-chartjs-2": "^4.0.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "react-plotly": "^1.0.0"
   },
   "scripts": {
     "start": "react-scripts start",

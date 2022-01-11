@@ -11,7 +11,7 @@ import {
     Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-
+import blockListProvider from "../provider/BlockListProvider";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -54,6 +54,32 @@ export class GasChart extends React.Component {
         };
     }
 
+    updateBlockData(blockData) {
+        let labels = [];
+        let minGasArray = [];
+        let backgroundColors = [];
+
+        for (let blockEntry of blockData) {
+            labels.push(blockEntry.blockNo);
+            minGasArray.push(blockEntry.minGas);
+            if (blockEntry.gasUsed / blockEntry.gasLimit < 0.95) {
+                backgroundColors.push("green");
+            } else {
+                backgroundColors.push("red");
+            }
+        }
+        let datasets = [
+            {
+                label: "Min gas",
+                data: minGasArray,
+                backgroundColor: backgroundColors
+            }
+        ];
+
+        this.setState({chartData: {labels: labels, datasets: datasets}});
+        console.log("Update block data: " + blockData);
+    }
+
     async fetchPrices() {
         //const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
         const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
@@ -75,22 +101,12 @@ export class GasChart extends React.Component {
         };
     }
 
-
-    async tick() {
-        let chartData = await this.fetchPrices();
-        console.log(chartData);
-        this.setState(state => ({
-            seconds: state.seconds + 2,
-            chartData: chartData
-        }));
-    }
-
     componentDidMount() {
-        this.interval = setInterval(async () => await this.tick(), 2000);
+        blockListProvider.attach(this);
     }
 
     componentWillUnmount() {
-        clearInterval(this.interval);
+        blockListProvider.detach(this);
     }
 
     formatTime(secs) {
