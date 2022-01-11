@@ -46,6 +46,7 @@ export class MinGasBlocksHistogram {
     name = "";
     blockNums = Array<number>();
     minGas = Array<number>();
+    blockFill = Array<number>();
 }
 
 
@@ -81,6 +82,7 @@ export class ChainGasScanner {
             if (bi !== undefined) {
                 mgh.blockNums.push(bi.blockNo);
                 mgh.minGas.push(bi.minGas);
+                mgh.blockFill.push(bi.gasUsed / bi.gasLimit);
             }
         }
         return mgh;
@@ -115,7 +117,6 @@ export class ChainGasScanner {
         return tfs;
     }
 
-
     async getBlocksWorker() {
         try {
             this.blockNumber = this.startingBlockNumber;
@@ -123,7 +124,6 @@ export class ChainGasScanner {
             if (this.blockNumber <= 0) {
                 this.blockNumber = await this.blockProvider.getBlockNumber();
             }
-
 
             while (true) {
                 for (let blockNum of this.gasPricesMap.keys()) {

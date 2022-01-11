@@ -3,7 +3,7 @@ import {
     connectToDatabase,
     getBlockEntriesGreaterThan, getBlockEntriesInRange,
     getHistEntry,
-    getLastBlockEntry,
+    getLastBlockEntry, getLastBlocks,
     getTimeFrameEntry
 } from "./mongo_connector";
 import * as dotenv from "dotenv";
@@ -90,6 +90,22 @@ app.get('/polygon/gas-info/current', async (req, res) => {
         res.sendStatus(404);
     }
 })
+
+app.get('/polygon/block-info/last-blocks', async (req, res) => {
+    try {
+        //@ts-ignore
+        let block_count = parseInt(req.query.block_count);
+
+        let blocks = await getLastBlocks(block_count);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(blocks));
+
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
+
 
 app.get('/polygon/block-info/list', async (req, res) => {
     try {

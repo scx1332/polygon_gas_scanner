@@ -69,7 +69,6 @@ div.scrollControl {
 }
 
 div.title {
-  position: absolute;
   left: 0px;
   right: 0px;
   top: 100px;
@@ -79,12 +78,22 @@ div.current-gas-chart {
   background-color: white;
   margin: 10px;
   padding: 20px;
-  position: absolute;
+  float: left;
   width: 800px;
   right: 0px;
   top: 200px;
 }
+div.page-content {
+
+}
 div.background {
   margin: 10px;
   position: relative;
+}
+div.block-list-component {
+  background-color: white;
+  margin: 10px;
+  padding: 20px;
+  float: left;
+
 }

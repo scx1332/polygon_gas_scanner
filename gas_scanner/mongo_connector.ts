@@ -40,6 +40,17 @@ export async function getLastBlockEntry(): Promise<number> {
     return -1;
 }
 
+export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
+    let array = new Array<BlockInfo>();
+    if (collections.blockInfoCollection !== undefined) {
+        const result = await collections.blockInfoCollection.find().sort({ blockNo: -1 }).limit(num).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new BlockInfo(), res));
+        }
+    }
+    return array;
+}
+
 export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {

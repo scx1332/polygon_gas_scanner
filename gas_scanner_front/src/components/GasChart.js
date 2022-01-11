@@ -55,8 +55,8 @@ export class GasChart extends React.Component {
     }
 
     async fetchPrices() {
-        const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
-        //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
+        //const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
+        const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
         const data = await res.json();
         console.log(data);
         return {
@@ -65,7 +65,13 @@ export class GasChart extends React.Component {
                 label: "Min gas",
                 data: data.minGas,
                 backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            }]
+            },
+            {
+                label: "Usage",
+                data: data.blockFill,
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            },
+            ]
         };
     }
 
