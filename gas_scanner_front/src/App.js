@@ -14,6 +14,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 import {BlockListComponent} from "./components/BlockList";
 import {BlockListProvider} from "./provider/BlockListProvider";
+import {GasChartAverage} from "./components/GasChartAverage";
 
 ChartJS.register(
     CategoryScale,
@@ -90,6 +91,10 @@ export class App extends React.Component {
             <div className="current-gas-chart">
               <GasChart></GasChart>
             </div>
+            <div className="average-gas-chart">
+              <GasChartAverage></GasChartAverage>
+            </div>
+
             <div className="block-list-component">
               <BlockListComponent></BlockListComponent>
             </div>

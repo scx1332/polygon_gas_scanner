@@ -24,6 +24,8 @@ export class BlockListProvider {
 
     data = defaultData;
 
+    blockData = [];
+
     constructor() {
         this.interval = setInterval(async () => await this.tick(), 2000);
     }
@@ -35,10 +37,15 @@ export class BlockListProvider {
     }
 
     async fetchLastBlocks() {
-        const res = await fetch("http://localhost:7888/polygon/block-info/last-blocks?block_count=30");
-        //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
+        let lastBLocks = 10;
+        if (this.blockData.length < 1000) {
+          lastBLocks = 2000;
+
+        }
+        const res = await fetch(`http://localhost:7888/polygon/block-info/last-blocks?block_count=${lastBLocks}`);
         let json_result = await res.json();
         return json_result;
+        //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
     }
 
     async tick() {
@@ -47,7 +54,43 @@ export class BlockListProvider {
         if (Array.isArray(blockData)) {
             blockData.sort((firstEl, secondEl) => firstEl.blockNo - secondEl.blockNo );
 
-            this.notify(blockData);
+            if (blockData.length > 0) {
+
+                let mergeDataSuccess = false;
+                let currentBlockNo = 0;
+                let newDataBlockStart = blockData[0].blockNo;
+                for (let idx = 0; idx < this.blockData.length; idx += 1) {
+                  let existingBlock = this.blockData[idx];
+                  if (currentBlockNo == 0) {
+                    currentBlockNo = existingBlock.blockNo;
+                  }
+    /*              if (existingBlock.blockNo - currentBlockNo > 10) {
+                    console.error(`ERror; ${existingBlock.blockNo - currentBlockNo}`);
+                    mergeDataSuccess = false;
+                    break;
+                  }*/
+                  currentBlockNo = existingBlock.blockNo;
+                  if (existingBlock.blockNo >= newDataBlockStart) {
+                    for (let newIdx = 0; newIdx < blockData.length; newIdx += 1) {
+                      let fixIdx = idx + newIdx;
+                      if (fixIdx < this.blockData.length) {
+                        this.blockData[fixIdx] = blockData[newIdx];
+                      } else {
+                        this.blockData.push(blockData[newIdx]);
+                      }
+                    }
+                    mergeDataSuccess = true;
+                    break;
+                  }
+                }
+
+
+                if (!mergeDataSuccess) {
+                  this.blockData = blockData;
+                }
+
+                this.notify(this.blockData);
+            }
         }
     }
 

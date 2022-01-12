@@ -1,12 +1,14 @@
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
 import { BlockInfo, MinGasBlocksHistogram, TimeFrameStatistics } from "./gas_scanner";
+import {TimeFrameBlockData} from "./gas_scanner_aggregator";
 
 
 export const collections: {
     blockInfoCollection?: mongoDB.Collection,
     timeFrameInfoCollection?: mongoDB.Collection,
-    histogramCollection?: mongoDB.Collection
+    histogramCollection?: mongoDB.Collection,
+    timeFrameBlockDataCollection?: mongoDB.Collection
 } = {}
 
 
@@ -26,6 +28,7 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     collections.blockInfoCollection = db.collection("BlockInfo");
     collections.timeFrameInfoCollection = db.collection("TimeFrameInfo");
     collections.histogramCollection = db.collection("Histograms");
+    collections.timeFrameBlockDataCollection = db.collection("TimeFrameBlockData");
 
     return client;
 }
@@ -80,6 +83,20 @@ export async function addBlockEntry(entry: BlockInfo) {
             const result = await collections.blockInfoCollection.insertOne(entry);
         } else {
             const result = await collections.blockInfoCollection.replaceOne({ _id: el._id }, entry);
+        }
+    }
+}
+
+export async function addTimeBlockDataEntry(entry: TimeFrameBlockData) {
+    if (collections.timeFrameBlockDataCollection !== undefined) {
+        const el = await collections.timeFrameBlockDataCollection.findOne({
+            timeFrameStart: entry.timeFrameStart,
+            timeSpanSeconds: entry.timeSpanSeconds
+        });
+        if (el == null) {
+            const result = await collections.timeFrameBlockDataCollection.insertOne(entry);
+        } else {
+            const result = await collections.timeFrameBlockDataCollection.replaceOne({ _id: el._id }, entry);
         }
     }
 }

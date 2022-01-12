@@ -80,9 +80,15 @@ div.current-gas-chart {
   padding: 20px;
   float: left;
   width: 800px;
-  right: 0px;
-  top: 200px;
 }
+div.average-gas-chart {
+  background-color: white;
+  margin: 10px;
+  padding: 20px;
+  float: left;
+  width: 800px;
+}
+
 div.page-content {
 
 }

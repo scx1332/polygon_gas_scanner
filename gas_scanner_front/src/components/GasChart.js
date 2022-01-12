@@ -59,7 +59,7 @@ export class GasChart extends React.Component {
         let minGasArray = [];
         let backgroundColors = [];
 
-        for (let blockEntry of blockData) {
+        for (let blockEntry of blockData.slice(blockData.length - 50)) {
             labels.push(blockEntry.blockNo);
             minGasArray.push(blockEntry.minGas);
             if (blockEntry.gasUsed / blockEntry.gasLimit < 0.95) {
