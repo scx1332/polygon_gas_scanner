@@ -1,6 +1,5 @@
 import React from 'react';
 import "./GasChart.css";
-import { useEffect, useState } from "react"
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -66,7 +65,7 @@ export class GasChartAverage extends React.Component {
         for (let blockDataIdx = 0; blockDataIdx < blockData.length; blockDataIdx += 1) {
             let blockEntry = blockData[blockDataIdx];
             let blockAvgStart = Math.round(blockEntry.blockNo / groupCount) * groupCount;
-            if (lastBlockAvgStart == 0) {
+            if (lastBlockAvgStart === 0) {
                 lastBlockAvgStart = blockAvgStart;
                 aggregateCount = 0;
             }
@@ -76,14 +75,14 @@ export class GasChartAverage extends React.Component {
                 backgroundColors.push("red");
             }
             if (blockEntry.minGas >= 1.0) {
-                if (minimumGas == 0) {
+                if (minimumGas === 0) {
                     minimumGas = blockEntry.minGas;
                 } else {
                     minimumGas = Math.min(minimumGas, blockEntry.minGas);
                 }
             }
             aggregateCount += 1
-            if (aggregateCount == groupCount || blockDataIdx == blockData.length - 1) {
+            if (aggregateCount === groupCount || blockDataIdx === blockData.length - 1) {
                 labels.push(blockAvgStart);
                 minGasArray.push(minimumGas);
                 lastBlockAvgStart = blockAvgStart;

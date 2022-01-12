@@ -1,9 +1,4 @@
-import React from 'react';
 
-
-class BlockListObserver {
-
-}
 const defaultData =
     [
         {"blockNo":23568293,"minGas":30,"gasUsed":13394423,"gasLimit":15384954,"transCount":60,"blockTime":"2022-01-10T20:09:44.000Z","blockVer":2,"_id":"61dd8b79ea4d960fb7fb4d35"},
@@ -33,7 +28,7 @@ export class BlockListProvider {
         this.observers.push(observer);
     }
     detach(observerToRemove: BlockListObserver) {
-        this.observers = this.observers.filter(observer => observerToRemove != observer);
+        this.observers = this.observers.filter(observer => observerToRemove !== observer);
     }
 
     async fetchLastBlocks() {
@@ -61,7 +56,7 @@ export class BlockListProvider {
                 let newDataBlockStart = blockData[0].blockNo;
                 for (let idx = 0; idx < this.blockData.length; idx += 1) {
                   let existingBlock = this.blockData[idx];
-                  if (currentBlockNo == 0) {
+                  if (currentBlockNo === 0) {
                     currentBlockNo = existingBlock.blockNo;
                   }
     /*              if (existingBlock.blockNo - currentBlockNo > 10) {

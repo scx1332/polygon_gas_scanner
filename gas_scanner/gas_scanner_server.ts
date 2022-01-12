@@ -15,26 +15,6 @@ app.use(cors());
 
 dotenv.config();
 
-function replacer(key: any, value: any): any {
-    if (value instanceof Map) {
-        return {
-            dataType: 'Map',
-            value: Array.from(value.entries()), // or with spread: value: [...value]
-        };
-    } else {
-        return value;
-    }
-}
-
-function reviver(key: any, value: any): any {
-    if (typeof value === 'object' && value !== null) {
-        if (value.dataType === 'Map') {
-            return new Map(value.value);
-        }
-    }
-    return value;
-}
-
 let PORT = parseInt(process.env.SERVER_LISTEN_PORT ?? "7888");
 
 // Handling GET / Request

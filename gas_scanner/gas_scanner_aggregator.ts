@@ -10,37 +10,6 @@ import * as dotenv from "dotenv";
 dotenv.config();
 const log: Logger = new Logger({ name: "AGGREGATOR" });
 
-/*
-function computeTimeFrameStatistics(name: string, blockCount: number): TimeFrameStatistics {
-    let tfs = new TimeFrameStatistics();
-    tfs.name = name;
-    for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {
-        let bi = this.blockMap.get(blockNo);
-
-        if (bi !== undefined) {
-            if (tfs.firstBlockTime == "") {
-                tfs.firstBlockTime = bi.blockTime;
-            }
-            tfs.lastBlockTime = bi.blockTime;
-            tfs.blockCount += 1;
-            if (bi.transCount != 0) {
-                tfs.transCount += bi.transCount;
-                if (tfs.minGas == 0.0) {
-                    tfs.minGas = bi.minGas;
-                }
-                if (bi.minGas < tfs.minGas) {
-                    tfs.minGas = bi.minGas;
-                }
-                if (bi.minGas > tfs.maxMinGas) {
-                    tfs.maxMinGas = bi.minGas;
-                }
-            }
-        }
-    }
-    return tfs;
-}*/
-
-
 export class TimeFrameBlockData {
     blockCount = 0;
     minGas = 0;
@@ -58,6 +27,8 @@ export class TimeFrameBlockData {
 function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo) {
     if (bi.transCount != 0 && bi.minGas >= 1.0) {
         tfs.blockCount += 1;
+        tfs.gasUsed += bi.gasUsed;
+        tfs.gasLimit += bi.gasLimit;
         if (tfs.firstBlock == 0) {
             tfs.firstBlock = bi.blockNo;
         } else if (bi.blockNo < tfs.firstBlock) {
@@ -113,21 +84,9 @@ function getDateFloor(date: Date, unit: string, units: number) : {date: Date, ti
     return {date: res, timeSpanSeconds: timeSpanSeconds};
 }
 
-
-async function main() {
-    console.log("Starting aggregator...");
-
-    console.log("Connecting to database...");
-    await connectToDatabase();
-
-
+async function aggregate(blocks : Array<BlockInfo>, timeFrameUnit: string, timeFrameUnits: number) {
     let startTime = new Date();
-    let blocks = await getBlockEntriesInRange(0, 1000000000);
     let tfs = new TimeFrameBlockData();
-
-    let timeFrameUnit = "minutes";
-    let timeFrameUnits = 1;
-
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx += 1) {
         let block = blocks[blockIdx];
         //log.info(JSON.stringify(block));
@@ -155,6 +114,37 @@ async function main() {
             tfs.timeSpanSeconds = date_timespan;
         }
     }
+
+}
+
+async function main() {
+    console.log("Starting aggregator...");
+
+    console.log("Connecting to database...");
+    await connectToDatabase();
+
+
+    let blocks = await getBlockEntriesInRange(0, 1000000000);
+
+    let params = [
+        {
+            timeFrameUnit: "minutes",
+            timeFrameUnits: 1
+        },
+        {
+            timeFrameUnit: "minutes",
+            timeFrameUnits: 10
+        },
+        {
+            timeFrameUnit: "hours",
+            timeFrameUnits: 1
+        },
+    ];
+
+    for (let param of params) {
+        await aggregate(blocks, param.timeFrameUnit, param.timeFrameUnits);
+    }
+
 }
 
 main()
