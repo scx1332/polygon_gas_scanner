@@ -1,4 +1,13 @@
 
+class BlockDataEntry {
+    blockNo: number = 0;
+    minGas: number = 0;
+    gasUsed: number = 0;
+    gasLimit: number = 0;
+    blockTime: string = "";
+}
+
+
 const defaultData =
     [
         {"blockNo":23568293,"minGas":30,"gasUsed":13394423,"gasLimit":15384954,"transCount":60,"blockTime":"2022-01-10T20:09:44.000Z","blockVer":2,"_id":"61dd8b79ea4d960fb7fb4d35"},
@@ -14,24 +23,24 @@ const defaultData =
     ];
 
 export class BlockListProvider {
-    observers  = [];
+    observers = new Array<any>();
     interval : NodeJS.Timer;
 
     data = defaultData;
 
-    blockData = [];
+    blockData = new Array<BlockDataEntry>();
 
     constructor() {
         this.interval = setInterval(async () => await this.tick(), 2000);
     }
-    attach(observer) {
+    attach(observer : any) {
         this.observers.push(observer);
     }
-    detach(observerToRemove) {
+    detach(observerToRemove: any) {
         this.observers = this.observers.filter(observer => observerToRemove !== observer);
     }
 
-    async fetchLastBlocks() {
+    async fetchLastBlocks() : Promise<Array<BlockDataEntry>> {
         let lastBLocks = 10;
         if (this.blockData.length < 1000) {
           lastBLocks = 2000;
@@ -89,7 +98,7 @@ export class BlockListProvider {
         }
     }
 
-    notify(blockData) {
+    notify(blockData : Array<BlockDataEntry>) {
         this.observers.forEach(observer => observer.updateBlockData(blockData));
     }
 }
