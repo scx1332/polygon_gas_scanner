@@ -1,11 +1,11 @@
-import React, {useLayoutEffect, useState} from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import {App} from './App';
 
 //very important:
 
-
+/*
 function useWindowSize() {
   const [size, setSize] = useState([0, 0]);
   useLayoutEffect(() => {
@@ -18,7 +18,7 @@ function useWindowSize() {
   }, []);
   return size;
 }
-
+*/
 ReactDOM.render(
   <React.StrictMode>
     <App />
