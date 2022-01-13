@@ -27,12 +27,8 @@ export class TimeFrameProvider {
     }
 
     async fetchLastTimeFrames() {
-        let lastBLocks = 10;
-        if (this.timeFrameData.length < 1000) {
-            lastBLocks = 2000;
-
-        }
-        const res = await fetch(`http://127.0.0.1:7888/polygon/block-info/last-time-frames?block_count=${lastBLocks}&timespan_seconds=3600`);
+        let lastBLocks = 100;
+        const res = await fetch(`http://127.0.0.1:7888/polygon/block-info/last-time-frames?block_count=${lastBLocks}&timespan_seconds=60`);
         let json_result = await res.json();
         return json_result;
         //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
