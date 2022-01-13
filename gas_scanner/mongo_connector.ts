@@ -54,6 +54,17 @@ export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
     return array;
 }
 
+export async function getLastTimeframes(num: number, timeSpanSeconds: number): Promise<Array<TimeFrameBlockData>> {
+    let array = new Array<TimeFrameBlockData>();
+    if (collections.timeFrameBlockDataCollection !== undefined) {
+        const result = await collections.timeFrameBlockDataCollection.find({timeSpanSeconds: {"$eq": timeSpanSeconds}}).sort({ timeFrameStart: -1 }).limit(num).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new TimeFrameBlockData(), res));
+        }
+    }
+    return array;
+}
+
 export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {

@@ -24,10 +24,10 @@ export class BlockListProvider {
     constructor() {
         this.interval = setInterval(async () => await this.tick(), 2000);
     }
-    attach(observer: BlockListObserver) {
+    attach(observer) {
         this.observers.push(observer);
     }
-    detach(observerToRemove: BlockListObserver) {
+    detach(observerToRemove) {
         this.observers = this.observers.filter(observer => observerToRemove !== observer);
     }
 
