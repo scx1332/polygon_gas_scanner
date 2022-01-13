@@ -46,7 +46,8 @@ export class BlockListProvider {
           lastBLocks = 2000;
 
         }
-        const res = await fetch(`http://localhost:7888/polygon/block-info/last-blocks?block_count=${lastBLocks}`);
+        const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+        const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-blocks?block_count=${lastBLocks}`);
         let json_result = await res.json();
         return json_result;
         //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
