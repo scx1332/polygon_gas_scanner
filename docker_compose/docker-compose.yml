@@ -5,8 +5,6 @@ services:
     container_name: gas_scanner_mongo
     volumes:
       - mongodb_data_container:/data/db
-    ports:
-      - "27017:27016"
 
   gas_scanner_container:
     image: gas_scanner
