@@ -1,4 +1,11 @@
 
+class TimeFrameData {
+    timeFrameStart: string = "";
+    gasUsed: number = 0;
+    gasLimit: number = 0;
+
+}
+
 const defaultData =
     [
         {"blockCount":1247,"minGas":30,"maxMinGas":113,"gasUsed":17227522419,"gasLimit":19552856050,"transCount":143978,"timeFrameStart":"2022-01-13T14:00:00.000Z","timeSpanSeconds":3600,"firstBlock":23673480,"lastBlock":23674735,"_id":"61e03d71d198935f64589680"},
@@ -9,20 +16,20 @@ const defaultData =
     ];
 
 export class TimeFrameProvider {
-    observers  = [];
+    observers  = new Array<any>();
     interval : NodeJS.Timer;
 
     data = defaultData;
 
-    timeFrameData = [];
+    timeFrameData = new Array<TimeFrameData>();
 
     constructor() {
         this.interval = setInterval(async () => await this.tick(), 2000);
     }
-    attach(observer) {
+    attach(observer : any) {
         this.observers.push(observer);
     }
-    detach(observerToRemove) {
+    detach(observerToRemove: any) {
         this.observers = this.observers.filter(observer => observerToRemove !== observer);
     }
 
@@ -50,7 +57,7 @@ export class TimeFrameProvider {
         }
     }
 
-    notify(timeFrameData) {
+    notify(timeFrameData : Array<TimeFrameData>) {
         this.observers.forEach(observer => observer.updateTimeFrameData(timeFrameData));
     }
 }
