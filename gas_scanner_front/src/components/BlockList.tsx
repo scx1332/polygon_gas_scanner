@@ -1,22 +1,37 @@
 import React from 'react';
 import "./BlockList.css";
 import {Bar} from "react-chartjs-2";
+// @ts-ignore
 import blockListProvider from "../provider/BlockListProvider";
 
 
+class BlockDataEntry {
+  blockNo: number = 0;
+  minGas: number = 0;
+  gasUsed: number = 0;
+  gasLimit: number = 0;
+  blockTime: string = "";
+}
+
+class BlockListComponentState {
+  seconds: number = 0;
+  blockData = new Array<BlockDataEntry>();
+}
 
 export class BlockListComponent extends React.Component {
-  constructor(props) {
+  state: BlockListComponentState;
+
+  constructor(props:any) {
     super(props);
     this.state = {
       seconds: 0,
-      blockData: []
+      blockData: new Array<BlockDataEntry>()
     };
   }
 
   //listener
-  updateBlockData(blockData) {
-    this.setState({blockData: blockData});
+  updateBlockData(blockData: BlockDataEntry) {
+    this.setState({ blockData: blockData });
     console.log("Update block data: " + blockData);
   }
 /*
@@ -45,16 +60,6 @@ export class BlockListComponent extends React.Component {
 
   componentWillUnmount() {
     blockListProvider.detach(this);
-  }
-
-  formatTime(secs) {
-    let hours   = Math.floor(secs / 3600);
-    let minutes = Math.floor(secs / 60) % 60;
-    let seconds = secs % 60;
-    return [hours, minutes, seconds]
-      .map(v => ('' + v).padStart(2, '0'))
-      .filter((v,i) => v !== '00' || i > 0)
-      .join(':');
   }
 
   render() {

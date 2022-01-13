@@ -1,5 +1,6 @@
 import React from 'react';
 import "./GasChart.css";
+import { useEffect, useState } from "react"
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -10,6 +11,7 @@ import {
     Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+// @ts-ignore
 import blockListProvider from "../provider/BlockListProvider";
 ChartJS.register(
     CategoryScale,
@@ -44,50 +46,42 @@ const defaultData = {
     ],
 };
 
-export class GasChartAverage extends React.Component {
-    constructor(props) {
+class BlockDataEntry {
+    blockNo: number = 0;
+    minGas: number = 0;
+    gasUsed: number = 0;
+    gasLimit: number = 0;
+    blockTime: string = "";
+}
+
+
+class GasChartState {
+    seconds: number = 0;
+    chartData: any;
+}
+
+
+export class GasChart extends React.Component {
+    state = new GasChartState();
+
+    constructor(props : any) {
         super(props);
-        this.state = {
-            seconds: parseInt(props.startTimeInSeconds, 10) || 0,
-            chartData: defaultData
-        };
+        this.state = new GasChartState();
+        this.state.chartData = defaultData;
     }
 
-    updateBlockData(blockData) {
+    updateBlockData(blockData : Array<BlockDataEntry>) {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = [];
 
-        let lastBlockAvgStart = 0;
-        let aggregateCount = 0;
-        let minimumGas = 0;
-        let groupCount = 30;
-        for (let blockDataIdx = 0; blockDataIdx < blockData.length; blockDataIdx += 1) {
-            let blockEntry = blockData[blockDataIdx];
-            let blockAvgStart = Math.round(blockEntry.blockNo / groupCount) * groupCount;
-            if (lastBlockAvgStart === 0) {
-                lastBlockAvgStart = blockAvgStart;
-                aggregateCount = 0;
-            }
+        for (let blockEntry of blockData.slice(blockData.length - 50)) {
+            labels.push(blockEntry.blockNo);
+            minGasArray.push(blockEntry.minGas);
             if (blockEntry.gasUsed / blockEntry.gasLimit < 0.95) {
                 backgroundColors.push("green");
             } else {
                 backgroundColors.push("red");
-            }
-            if (blockEntry.minGas >= 1.0) {
-                if (minimumGas === 0) {
-                    minimumGas = blockEntry.minGas;
-                } else {
-                    minimumGas = Math.min(minimumGas, blockEntry.minGas);
-                }
-            }
-            aggregateCount += 1
-            if (aggregateCount === groupCount || blockDataIdx === blockData.length - 1) {
-                labels.push(blockAvgStart);
-                minGasArray.push(minimumGas);
-                lastBlockAvgStart = blockAvgStart;
-                aggregateCount = 0;
-                minimumGas = 0;
             }
         }
         let datasets = [
@@ -131,7 +125,7 @@ export class GasChartAverage extends React.Component {
         blockListProvider.detach(this);
     }
 
-    formatTime(secs) {
+    formatTime(secs : number) {
         let hours   = Math.floor(secs / 3600);
         let minutes = Math.floor(secs / 60) % 60;
         let seconds = secs % 60;
@@ -145,7 +139,7 @@ export class GasChartAverage extends React.Component {
         return (
             <div>
                 <div>
-                    <h1>Live {} blocks average</h1> (Timer: {this.formatTime(this.state.seconds)})
+                    <h1>Live chart data</h1> (Timer: {this.formatTime(this.state.seconds)})
                 </div>
                 <div>
                     <Bar options={{animation: {

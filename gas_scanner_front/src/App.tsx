@@ -1,4 +1,5 @@
 import React from 'react';
+// @ts-ignore
 import {GasChart} from "./components/GasChart";
 import "./App.css";
 import { useEffect, useState } from "react"
@@ -13,8 +14,11 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import {BlockListComponent} from "./components/BlockList";
+// @ts-ignore
 import {BlockListProvider} from "./provider/BlockListProvider";
+// @ts-ignore
 import {GasChartAverage} from "./components/GasChartAverage";
+// @ts-ignore
 import {GasChartAverageTimeFrame} from "./components/GasChartTimeFrame";
 
 ChartJS.register(
@@ -34,7 +38,7 @@ export const options = {
     },
     title: {
       display: true,
-      text: 'GasChart.js Bar Chart',
+      text: 'GasChart.tsx Bar Chart',
     },
   },
 };
@@ -54,7 +58,8 @@ const defaultData =
   ];
 
 export class App extends React.Component {
-  constructor(props) {
+  // @ts-ignore
+    constructor(props) {
     super(props);
     this.state = {
       seconds: parseInt(props.startTimeInSeconds, 10) || 0,
@@ -69,16 +74,6 @@ export class App extends React.Component {
 
   componentWillUnmount() {
     //clearInterval(this.interval);
-  }
-
-  formatTime(secs) {
-    let hours   = Math.floor(secs / 3600);
-    let minutes = Math.floor(secs / 60) % 60;
-    let seconds = secs % 60;
-    return [hours, minutes, seconds]
-        .map(v => ('' + v).padStart(2, '0'))
-        .filter((v,i) => v !== '00' || i > 0)
-        .join(':');
   }
 
   render() {
