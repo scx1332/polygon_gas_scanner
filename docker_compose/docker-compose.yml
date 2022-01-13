@@ -2,11 +2,13 @@ version: "3.3"  # optional since v1.27.0
 services:
   mongodb_container:
     image: mongo:latest
+    container_name: gas_scanner_mongo
     volumes:
       - mongodb_data_container:/data/db
 
   gas_scanner_container:
     image: gas_scanner
+    container_name: gas_scanner_main
     environment:
       PROVIDER_ADDRESS: https://bor.golem.network
       MONGO_DB_CONNECTION_STRING: mongodb://mongodb_container:27017
