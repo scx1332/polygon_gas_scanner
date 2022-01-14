@@ -6,9 +6,15 @@ services:
     volumes:
       - mongodb_data_container:/data/db
 
+  gas_scanner_front:
+    image: gas_scanner_frontend_image
+    container_name: gas_scanner_frontend
+    ports:
+      - "3001:5555"
+
   gas_scanner_container:
-    image: gas_scanner
-    container_name: gas_scanner_main
+    image: gas_scanner_backend_image
+    container_name: gas_scanner_backend
     environment:
       PROVIDER_ADDRESS: https://bor.golem.network
       MONGO_DB_CONNECTION_STRING: mongodb://mongodb_container:27017

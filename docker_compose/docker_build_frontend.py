@@ -1,8 +1,9 @@
 import os
 import shutil
 
-if os.path.exists("gas_scanner"):
-    shutil.rmtree("gas_scanner")
+if os.path.exists("gas_scanner_front"):
+    shutil.rmtree("gas_scanner_front")
+
 
 def ignore_files(dir, paths):
     ignore_list = []
@@ -20,6 +21,6 @@ def ignore_files(dir, paths):
         
     return ignore_list
 
-shutil.copytree("../gas_scanner", "gas_scanner", ignore=ignore_files)
+shutil.copytree("../gas_scanner_front", "gas_scanner_front", ignore=ignore_files)
 
-os.system("docker build . -t gas_scanner")
+os.system("docker build -f DockerfileFrontend -t gas_scanner_frontend_image .")

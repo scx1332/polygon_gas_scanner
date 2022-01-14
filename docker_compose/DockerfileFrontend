@@ -1,0 +1,13 @@
+FROM node
+
+RUN npm install -g typescript
+RUN npm install -g ts-node
+RUN npm install -g serve
+
+COPY gas_scanner_front /gas_scanner_front
+WORKDIR /gas_scanner_front
+RUN npm install
+RUN npm run build
+
+ENTRYPOINT serve -l 5555 build
+
