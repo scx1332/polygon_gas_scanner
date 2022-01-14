@@ -13,7 +13,11 @@ services:
       PROVIDER_ADDRESS: https://bor.golem.network
       MONGO_DB_CONNECTION_STRING: mongodb://mongodb_container:27017
       MONGO_DB_NAME: GasUsage
-      
+
+      AGGREGATOR_DELAY_START: 60
+      AGGREGATOR_DELAY_SECONDS: 60
+
+      WATCHDOG_START_AGGREGATOR: node dist/gas_scanner_aggregator.js
       WATCHDOG_START_SERVER: node dist/gas_scanner_server.js
       WATCHDOG_START_COMMAND: node dist/gas_scanner_main.js --fillMissingBlocks
       WATCHDOG_AFTER_KILL_DELAY_MS: 5000

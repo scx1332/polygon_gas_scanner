@@ -3,6 +3,7 @@ import {addTimeBlockDataEntry, connectToDatabase, getBlockEntriesInRange} from "
 import * as dotenv from "dotenv";
 import {TimeFrameBlockData} from "./src/model/TimeFrameBlockData";
 import {BlockInfo} from "./src/model/BlockInfo";
+import {delay} from "./utils";
 
 
 dotenv.config();
@@ -108,28 +109,42 @@ async function main() {
 
     log.info("Connecting to database...");
 
+
     await connectToDatabase();
 
-    let blocks = await getBlockEntriesInRange(0, 1000000000);
+    let aggregator_delay_seconds = parseInt(process.env.AGGREGATOR_DELAY_SECONDS ?? "60");
+    let aggregator_delay_start = parseInt(process.env.AGGREGATOR_DELAY_START ?? "60");
 
-    let params = [
-        {
-            timeFrameUnit: "minutes",
-            timeFrameUnits: 1
-        },
-        {
-            timeFrameUnit: "minutes",
-            timeFrameUnits: 10
-        },
-        {
-            timeFrameUnit: "hours",
-            timeFrameUnits: 1
-        },
-    ];
+    log.info(`Waiting for: ${aggregator_delay_start} seconds`);
+    await delay(aggregator_delay_start * 1000);
+    log.info("Wait ended");
 
-    for (let param of params) {
-        await aggregate(blocks, param.timeFrameUnit, param.timeFrameUnits);
+    while (true) {
+        let blocks = await getBlockEntriesInRange(0, 1000000000);
+
+        let params = [
+            {
+                timeFrameUnit: "minutes",
+                timeFrameUnits: 1
+            },
+            {
+                timeFrameUnit: "minutes",
+                timeFrameUnits: 10
+            },
+            {
+                timeFrameUnit: "hours",
+                timeFrameUnits: 1
+            },
+        ];
+
+        for (let param of params) {
+            await aggregate(blocks, param.timeFrameUnit, param.timeFrameUnits);
+        }
+        log.info(`Waiting for: ${aggregator_delay_seconds} seconds`);
+        await delay(aggregator_delay_seconds * 1000);
+        log.info("Wait ended");
     }
+
 
 }
 
