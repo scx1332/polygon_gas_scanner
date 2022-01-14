@@ -3,51 +3,11 @@ import { bignumberToGwei, delay } from "./utils";
 import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./mongo_connector";
-
-const CURRENT_BLOCK_INFO_VERSION = 2;
-
-class ChainGasScannerStatus {
-    name = "MainScanner_" + new Date().toISOString();
-    processedTransactionCount = 0;
-    totalTransactionCount = 0;
-    droppedTransactionCount = 0;
-    processedBlock = 0;
-    currentBlock = 0;
-    lateBlocks = 0;
-    maxLateBlocks = 0;
-    lastUpdate = new Date().toISOString();
-}
-
-//keep names short to improve performance on MongoDB
-export class BlockInfo {
-    blockNo = 0;
-    minGas = 0;
-    gasUsed = 0;
-    gasLimit = 0;
-    transCount = 0;
-    blockTime = "";
-    blockVer = CURRENT_BLOCK_INFO_VERSION;
-}
-
-export class TimeFrameStatistics {
-    name = "";
-    blockCount = 0;
-    minGas = 0;
-    maxMinGas = 0;
-    gasUsed = 0;
-    gasLimit = 0;
-    transCount = 0;
-    firstBlockTime = "";
-    lastBlockTime = "";
-}
-
-export class MinGasBlocksHistogram {
-    name = "";
-    blockNums = Array<number>();
-    minGas = Array<number>();
-    blockFill = Array<number>();
-}
+import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./src/mongo_connector";
+import {BlockInfo} from "./src/model/BlockInfo";
+import {ChainGasScannerStatus} from "./src/model/ChainGasScannerStatus";
+import {TimeFrameStatistics} from "./src/model/TimeFrameStatistics";
+import {MinGasBlocksHistogram} from "./src/model/MinGasBlocksHistogram";
 
 
 export class ChainGasScanner {

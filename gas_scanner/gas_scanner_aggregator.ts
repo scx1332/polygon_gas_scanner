@@ -1,27 +1,13 @@
-
 import { Logger } from "tslog";
-
-
-import {addTimeBlockDataEntry, connectToDatabase, getBlockEntriesInRange} from "./mongo_connector";
-import {BlockInfo, TimeFrameStatistics} from "./gas_scanner";
+import {addTimeBlockDataEntry, connectToDatabase, getBlockEntriesInRange} from "./src/mongo_connector";
 import * as dotenv from "dotenv";
+import {TimeFrameBlockData} from "./src/model/TimeFrameBlockData";
+import {BlockInfo} from "./src/model/BlockInfo";
 
 
 dotenv.config();
 const log: Logger = new Logger({ name: "AGGREGATOR" });
 
-export class TimeFrameBlockData {
-    blockCount = 0;
-    minGas = 0;
-    maxMinGas = 0;
-    gasUsed = 0;
-    gasLimit = 0;
-    transCount = 0;
-    timeFrameStart = "";
-    timeSpanSeconds = 0;
-    firstBlock = 0;
-    lastBlock = 0;
-}
 
 
 function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo) {
@@ -118,11 +104,11 @@ async function aggregate(blocks : Array<BlockInfo>, timeFrameUnit: string, timeF
 }
 
 async function main() {
-    console.log("Starting aggregator...");
+    log.info("Starting aggregator...");
 
-    console.log("Connecting to database...");
+    log.info("Connecting to database...");
+
     await connectToDatabase();
-
 
     let blocks = await getBlockEntriesInRange(0, 1000000000);
 

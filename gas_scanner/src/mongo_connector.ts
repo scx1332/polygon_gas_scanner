@@ -1,7 +1,8 @@
 import * as mongoDB from "mongodb";
-import { BlockList } from "net";
-import { BlockInfo, MinGasBlocksHistogram, TimeFrameStatistics } from "./gas_scanner";
-import {TimeFrameBlockData} from "./gas_scanner_aggregator";
+import {BlockInfo} from "./model/BlockInfo";
+import {TimeFrameBlockData} from "./model/TimeFrameBlockData";
+import {TimeFrameStatistics} from "./model/TimeFrameStatistics";
+import {MinGasBlocksHistogram} from "./model/MinGasBlocksHistogram";
 
 
 export const collections: {

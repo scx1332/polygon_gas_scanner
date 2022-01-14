@@ -5,7 +5,7 @@ import {
     getHistEntry,
     getLastBlockEntry, getLastBlocks, getLastTimeframes,
     getTimeFrameEntry
-} from "./mongo_connector";
+} from "./src/mongo_connector";
 import * as dotenv from "dotenv";
 let cors = require("cors");
 

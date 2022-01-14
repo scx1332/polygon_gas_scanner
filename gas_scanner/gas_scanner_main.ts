@@ -2,7 +2,7 @@ import { ChainGasScanner } from "./gas_scanner";
 import { delay } from "./utils";
 import * as dotenv from 'dotenv';
 import { parse } from 'ts-command-line-args';
-import { clearDatabase, connectToDatabase, getLastBlockEntry } from "./mongo_connector";
+import { clearDatabase, connectToDatabase, getLastBlockEntry } from "./src/mongo_connector";
 
 //load config from .env
 
