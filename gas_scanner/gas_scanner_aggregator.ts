@@ -1,5 +1,10 @@
 import { Logger } from "tslog";
-import {addTimeBlockDataEntry, connectToDatabase, getBlockEntriesInRange} from "./src/mongo_connector";
+import {
+    addTimeBlockDataEntry,
+    connectToDatabase,
+    getBlockEntriesInRange,
+    getBlockEntriesNewerThan
+} from "./src/mongo_connector";
 import * as dotenv from "dotenv";
 import {TimeFrameBlockData} from "./src/model/TimeFrameBlockData";
 import {BlockInfo} from "./src/model/BlockInfo";
@@ -120,7 +125,11 @@ async function main() {
     log.info("Wait ended");
 
     while (true) {
-        let blocks = await getBlockEntriesInRange(0, 1000000000);
+        //2 hours behind
+        let dt = new Date(Date.now() - 2 * 3600 * 1000);
+
+
+        let blocks = await getBlockEntriesNewerThan(dt);
 
         let params = [
             {

@@ -76,6 +76,19 @@ export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Arra
     }
     return array;
 }
+
+export async function getBlockEntriesNewerThan(minDate: Date): Promise<Array<BlockInfo>> {
+    let array = new Array<BlockInfo>();
+    if (collections.blockInfoCollection !== undefined) {
+        const result = await collections.blockInfoCollection.find({ "blockTime": { $gt: minDate.toISOString() } }).sort({ blockNo: -1 }).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new BlockInfo(), res));
+        }
+    }
+    return array;
+}
+
+
 export async function getBlockEntriesInRange(minBlock: number, maxBlock: number): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {
@@ -86,7 +99,6 @@ export async function getBlockEntriesInRange(minBlock: number, maxBlock: number)
     }
     return array;
 }
-
 
 export async function addBlockEntry(entry: BlockInfo) {
     if (collections.blockInfoCollection !== undefined) {
