@@ -240,77 +240,66 @@ export class ChainGasScanner {
                 //console.log(e);
             }
         }*/
-        if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
-            for (let log of transactionReceipt.logs) {
-                try {
 
-                    let parsed = ERC20interface.parseLog(log);
-                    console.log(JSON.stringify(parsed));
-                    if (parsed.name == "Transfer") {
-                        //console.log("Block number: " + blockNumber);
-                        //console.log("Tx transaction: " + transactionReceipt.transactionHash);
+        try {
+            if (transactionReceipt.to != undefined || transactionReceipt.from != undefined)
+            {
+                if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
+                    for (let log of transactionReceipt.logs) {
 
-                        let tokenFrom = parsed.args[0];
-                        let tokenTo = parsed.args[1];
-                        let amount = parsed.args[2];
+                        let parsed = ERC20interface.parseLog(log);
+                        console.log(JSON.stringify(parsed));
+                        if (parsed.name == "Transfer") {
+                            //console.log("Block number: " + blockNumber);
+                            //console.log("Tx transaction: " + transactionReceipt.transactionHash);
 
-                        if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
-                            let ma = new MonitoredAddress();
-                            ma.address = transactionReceipt.from;
-                            this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
-                            await addMonitoredAddress(ma);
+                            let tokenFrom = parsed.args[0];
+                            let tokenTo = parsed.args[1];
+                            let amount = parsed.args[2];
+
+                            if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
+                                let ma = new MonitoredAddress();
+                                ma.address = transactionReceipt.from;
+                                this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
+                                await addMonitoredAddress(ma);
+                            }
+
+                            let newEntry = new TransactionERC20Entry();
+                            newEntry.txid = transactionReceipt.transactionHash;
+                            newEntry.blockNo = transactionReceipt.blockNumber;
+                            newEntry.gasUsed = transactionReceipt.gasUsed.toString();
+                            newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
+                            newEntry.erc20amount = amount.toString();
+                            newEntry.to = transactionReceipt.to;
+                            newEntry.from = transactionReceipt.from;
+                            newEntry.erc20from = tokenFrom;
+                            newEntry.erc20to = tokenTo;
+                            await addERC20TransactionEntry(newEntry);
+                            console.log(`Glm transfer from ${tokenFrom} to ${tokenTo}. Amount ${amount}`);
                         }
-
+                    }
+                } else {
+                    if (this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
                         let newEntry = new TransactionERC20Entry();
                         newEntry.txid = transactionReceipt.transactionHash;
                         newEntry.blockNo = transactionReceipt.blockNumber;
                         newEntry.gasUsed = transactionReceipt.gasUsed.toString();
                         newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
-                        newEntry.erc20amount = amount;
+                        newEntry.erc20amount = "";
                         newEntry.to = transactionReceipt.to;
                         newEntry.from = transactionReceipt.from;
-                        newEntry.erc20from = tokenFrom;
-                        newEntry.erc20to = tokenTo;
+                        newEntry.erc20from = "";
+                        newEntry.erc20to = "";
                         await addERC20TransactionEntry(newEntry);
-                        console.log(`Glm transfer from ${tokenFrom} to ${tokenTo}. Amount ${amount}`);
                     }
-                } catch (e) {
-                    //ignore
-                    //console.log(e);
                 }
             }
+        } catch (e) {
+            //ignore
+            console.log(e);
         }
 
-        if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
 
-
-        }
-
-        for (let log of transactionReceipt.logs) {
-            try {
-
-                let parsed = ERC20interface.parseLog(log);
-                if (parsed.name == "Transfer") {
-                    //console.log("Block number: " + blockNumber);
-                    //console.log("Tx transaction: " + transactionReceipt.transactionHash);
-
-                    let tokenFrom = parsed.args[0];
-                    let tokenTo = parsed.args[1];
-                    let amount = parsed.args[2];
-                    transferCount += 1;
-                    addresses[tokenFrom] = 1;
-                    addresses[tokenTo] = 1;
-
-                    if (tokenFrom.toString() === "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" || tokenTo.toString() === "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174") {
-                        console.log(`From: ${tokenFrom}, To: ${tokenTo}, amount: ${amount.toString()}`);
-                    }
-
-                }
-            } catch (e) {
-                //ignore
-                //console.log(e);
-            }
-        }
         if (transferCount >= 2 && transferCount <= 3) {
             for (let address in addresses) {
                 //console.log(address);
