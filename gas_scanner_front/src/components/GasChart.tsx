@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 // @ts-ignore
-import blockListProvider from "../provider/BlockListProvider";
+import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -46,14 +46,6 @@ const defaultData = {
     ],
 };
 
-class BlockDataEntry {
-    blockNo: number = 0;
-    minGas: number = 0;
-    gasUsed: number = 0;
-    gasLimit: number = 0;
-    blockTime: string = "";
-}
-
 
 class GasChartState {
     seconds: number = 0;
@@ -70,10 +62,11 @@ export class GasChart extends React.Component {
         this.state.chartData = defaultData;
     }
 
-    updateBlockData(blockData : Array<BlockDataEntry>) {
+    updateBlockList(blockListProviderResult: BlockListProviderResult) {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = [];
+        let blockData = blockListProviderResult.blockData;
 
         for (let blockEntry of blockData.slice(blockData.length - 50)) {
             labels.push(blockEntry.blockNo);

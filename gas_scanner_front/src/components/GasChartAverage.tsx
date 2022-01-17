@@ -11,7 +11,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 //@ts-ignore
-import blockListProvider from "../provider/BlockListProvider";
+import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -66,10 +66,11 @@ export class GasChartAverage extends React.Component {
         this.state.chartData = defaultData;
     }
 
-    updateBlockData(blockData : Array<BlockDataEntry>) {
+    updateBlockList(blockListProviderResult: BlockListProviderResult) {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = [];
+        let blockData = blockListProviderResult.blockData;
 
         let lastBlockAvgStart = 0;
         let aggregateCount = 0;

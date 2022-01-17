@@ -44,15 +44,12 @@ export class TimeFrameProvider {
 
     async tick() {
         let timeFrameData = await this.fetchLastTimeFrames();
-        console.log("Block list provider: " + timeFrameData);
+        console.log("TimeFrameProvider: " + timeFrameData);
         if (Array.isArray(timeFrameData)) {
             timeFrameData.sort((firstEl, secondEl) => firstEl.timeFrameStart.localeCompare(secondEl.timeFrameStart) );
 
             if (timeFrameData.length > 0) {
-
-
                 this.timeFrameData = timeFrameData;
-
                 this.notify(this.timeFrameData);
             }
         }

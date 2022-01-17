@@ -57,6 +57,7 @@ class TimeFrameData {
 class GasChartAverageState {
     seconds: number = 0;
     chartData: any;
+    isLoading: boolean = true;
 }
 
 export class GasChartAverageTimeFrame extends React.Component {
@@ -98,7 +99,7 @@ export class GasChartAverageTimeFrame extends React.Component {
             }
         ];
 
-        this.setState({chartData: {labels: labels, datasets: datasets}});
+        this.setState({chartData: {labels: labels, datasets: datasets, isLoading: false}});
         console.log("Update block data: " + timeFrameData);
     }
 
@@ -148,10 +149,18 @@ export class GasChartAverageTimeFrame extends React.Component {
                     <h1>Live {} blocks average</h1> (Timer: {this.formatTime(this.state.seconds)})
                 </div>
                 <div>
-                    <Bar options={{animation: {
-                            duration: 0,
-                        }}} data={this.state.chartData}/>
+                    {this.state.isLoading &&
+                      <div>Cannot load data</div>
+                    }
+                    {!this.state.isLoading &&
+                      <Bar options={{
+                          animation: {
+                              duration: 0,
+                          }
+                      }} data={this.state.chartData}/>
+                    }
                 </div>
+
             </div>
 
         );

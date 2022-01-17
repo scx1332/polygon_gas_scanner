@@ -2,7 +2,7 @@ import React from 'react';
 import "./BlockList.css";
 import {Bar} from "react-chartjs-2";
 // @ts-ignore
-import blockListProvider from "../provider/BlockListProvider";
+import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
 
 
 class BlockDataEntry {
@@ -14,8 +14,8 @@ class BlockDataEntry {
 }
 
 class BlockListComponentState {
-  seconds: number = 0;
   blockData = new Array<BlockDataEntry>();
+  error = "";
 }
 
 export class BlockListComponent extends React.Component {
@@ -24,15 +24,15 @@ export class BlockListComponent extends React.Component {
   constructor(props:any) {
     super(props);
     this.state = {
-      seconds: 0,
-      blockData: new Array<BlockDataEntry>()
+      blockData: new Array<BlockDataEntry>(),
+      error: ""
     };
   }
 
   //listener
-  updateBlockData(blockData: BlockDataEntry) {
-    this.setState({ blockData: blockData });
-    console.log("Update block data: " + blockData);
+  updateBlockList(blockListProviderResult: BlockListProviderResult) {
+    this.setState({ blockData: blockListProviderResult.blockData, error: blockListProviderResult.error });
+    console.log("Update block data: " + blockListProviderResult.blockData);
   }
 /*
   async fetchLastBlocks() {
@@ -69,26 +69,31 @@ export class BlockListComponent extends React.Component {
           <h2>Latest blocks</h2>
         </div>
         <div>
-          <table>
-            <thead>
-              <tr>
-                <th>Block <br/>number</th>
-                <th>Minimum gas<br/> in block</th>
-                <th>% of gas<br/> used</th>
-                <th>Block<br/> date</th>
-              </tr>
+          {this.state.error !== "" &&
+              <div>{this.state.error}</div>
+          }
+          {this.state.error === "" &&
+              <table>
+                <thead>
+                <tr>
+                  <th>Block <br/>number</th>
+                  <th>Minimum gas<br/> in block</th>
+                  <th>% of gas<br/> used</th>
+                  <th>Block<br/> date</th>
+                </tr>
 
-            </thead>
-            <tbody>
-              {this.state.blockData.map(blockData => (
-                <tr key={blockData.blockNo}>
-                  <td><a href={"https://polygonscan.com/block/" + blockData.blockNo}>{blockData.blockNo}</a></td>
-                  <td>{blockData.minGas.toFixed(2)}</td>
-                  <td>{(blockData.gasUsed / blockData.gasLimit).toFixed(3)}</td>
-                  <td>{blockData.blockTime}</td>
-                </tr>))}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                {this.state.blockData.map(blockData => (
+                    <tr key={blockData.blockNo}>
+                      <td><a href={"https://polygonscan.com/block/" + blockData.blockNo}>{blockData.blockNo}</a></td>
+                      <td>{blockData.minGas.toFixed(2)}</td>
+                      <td>{(blockData.gasUsed / blockData.gasLimit).toFixed(3)}</td>
+                      <td>{blockData.blockTime}</td>
+                    </tr>))}
+                </tbody>
+              </table>
+          }
         </div>
       </div>
 
