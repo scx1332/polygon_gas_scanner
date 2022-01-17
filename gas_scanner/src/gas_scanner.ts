@@ -6,8 +6,8 @@ import * as mongoDB from "mongodb";
 import { BlockList } from "net";
 import {
     addBlockEntry,
-    addERC20TransactionEntry,
-    getLastBlockEntry,
+    addERC20TransactionEntry, addMonitoredAddress,
+    getLastBlockEntry, getMonitoredAddresses,
     updateHistEntry,
     updateTimeFrameEntry
 } from "./mongo_connector";
@@ -16,6 +16,7 @@ import { ChainGasScannerStatus } from "./model/ChainGasScannerStatus";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
 import {TransactionERC20Entry} from "./model/TransactionEntry";
+import {MonitoredAddress} from "./model/MonitoredAddresses";
 
 const ERC20interface = new ethers.utils.Interface(IERC20_abi);
 
@@ -38,11 +39,19 @@ export class ChainGasScanner {
     blockTime: string = "";
 
 
+    monitoredAddresses = new Map<string, MonitoredAddress>();
 
     constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.startingBlockNumber = startingBlock;
+    }
+
+    async loadMonitoredAddresses() {
+        let list = await getMonitoredAddresses();
+        for (let addr of list) {
+            this.monitoredAddresses.set(addr.address.toLowerCase(), addr);
+        }
     }
 
     computeBlockHistogram(name: string, blockCount: number): MinGasBlocksHistogram {
@@ -245,6 +254,13 @@ export class ChainGasScanner {
                         let tokenTo = parsed.args[1];
                         let amount = parsed.args[2];
 
+                        if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
+                            let ma = new MonitoredAddress();
+                            ma.address = transactionReceipt.from;
+                            this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
+                            await addMonitoredAddress(ma);
+                        }
+
                         let newEntry = new TransactionERC20Entry();
                         newEntry.txid = transactionReceipt.transactionHash;
                         newEntry.blockNo = transactionReceipt.blockNumber;
@@ -340,6 +356,7 @@ export class ChainGasScanner {
     }
 
     async runWorkers() {
+        await this.loadMonitoredAddresses();
         this.workerProcessTransactions = this.processTransactions();
         this.workerGetBlocks = this.getBlocksWorker();
     }

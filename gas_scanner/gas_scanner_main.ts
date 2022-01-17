@@ -47,7 +47,7 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
         startingBlockNumber = await getLastBlockEntry();
     }
 
-    let p = new ChainGasScanner(PROVIDER_ADDRESS, 23830847);
+    let p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
 
     await p.runWorkers();
 

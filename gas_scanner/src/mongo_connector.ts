@@ -4,6 +4,7 @@ import { TimeFrameBlockData } from "./model/TimeFrameBlockData";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
 import {TransactionERC20Entry} from "./model/TransactionEntry";
+import {MonitoredAddress} from "./model/MonitoredAddresses";
 
 
 export const collections: {
@@ -12,6 +13,7 @@ export const collections: {
     histogramCollection?: mongoDB.Collection,
     timeFrameBlockDataCollection?: mongoDB.Collection,
     erc20Transactions?: mongoDB.Collection
+    monitoredAddresses?: mongoDB.Collection
 } = {}
 
 
@@ -33,6 +35,7 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     collections.histogramCollection = db.collection("Histograms");
     collections.timeFrameBlockDataCollection = db.collection("TimeFrameBlockData");
     collections.erc20Transactions = db.collection("ERC20Transaction");
+    collections.monitoredAddresses = db.collection("MonitoredAddress");
 
     return client;
 }
@@ -98,6 +101,28 @@ export async function getBlockEntriesInRange(minBlock: number, maxBlock: number)
         const result = await collections.blockInfoCollection.find({ "blockNo": { $gte: minBlock, $lt: maxBlock } }).sort({ blockNo: 1 }).toArray();
         for (let res of result) {
             array.push(Object.assign(new BlockInfo(), res));
+        }
+    }
+    return array;
+}
+
+export async function addMonitoredAddress(entry: MonitoredAddress) {
+    if (collections.monitoredAddresses !== undefined) {
+        const el = await collections.monitoredAddresses.findOne({ address: entry.address });
+        if (el == null) {
+            const result = await collections.monitoredAddresses.insertOne(entry);
+        } else {
+            const result = await collections.monitoredAddresses.replaceOne({ _id: el._id }, entry);
+        }
+    }
+}
+
+export async function getMonitoredAddresses() {
+    let array = new Array<MonitoredAddress>();
+    if (collections.monitoredAddresses !== undefined) {
+        const result = await collections.monitoredAddresses.find({ }).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new MonitoredAddress(), res));
         }
     }
     return array;
