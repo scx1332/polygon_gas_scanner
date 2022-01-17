@@ -4,12 +4,20 @@ import * as ethers from "ethers";
 import IERC20_abi from "./contracts/IERC20.abi.json";
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./mongo_connector";
+import {
+    addBlockEntry,
+    addERC20TransactionEntry,
+    getLastBlockEntry,
+    updateHistEntry,
+    updateTimeFrameEntry
+} from "./mongo_connector";
 import { BlockInfo } from "./model/BlockInfo";
 import { ChainGasScannerStatus } from "./model/ChainGasScannerStatus";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
+import {TransactionERC20Entry} from "./model/TransactionEntry";
 
+const ERC20interface = new ethers.utils.Interface(IERC20_abi);
 
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
@@ -30,7 +38,6 @@ export class ChainGasScanner {
     blockTime: string = "";
 
 
-    interfaceForLogParsing = new ethers.utils.Interface(IERC20_abi);
 
     constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
@@ -186,7 +193,7 @@ export class ChainGasScanner {
         }
     }
 
-    processTransactionReceipt(transactionReceipt: TransactionReceipt) {
+    async processTransactionReceipt(transactionReceipt: TransactionReceipt) {
         let transferCount = 0;
         let addresses: { [address: string]: number } = {};
         //console.log("Gas price: " + transactionReceipt.effectiveGasPrice);
@@ -224,12 +231,53 @@ export class ChainGasScanner {
                 //console.log(e);
             }
         }*/
+        if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
+            for (let log of transactionReceipt.logs) {
+                try {
+
+                    let parsed = ERC20interface.parseLog(log);
+                    console.log(JSON.stringify(parsed));
+                    if (parsed.name == "Transfer") {
+                        //console.log("Block number: " + blockNumber);
+                        //console.log("Tx transaction: " + transactionReceipt.transactionHash);
+
+                        let tokenFrom = parsed.args[0];
+                        let tokenTo = parsed.args[1];
+                        let amount = parsed.args[2];
+
+                        let newEntry = new TransactionERC20Entry();
+                        newEntry.txid = transactionReceipt.transactionHash;
+                        newEntry.blockNo = transactionReceipt.blockNumber;
+                        newEntry.gasUsed = transactionReceipt.gasUsed.toString();
+                        newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
+                        newEntry.erc20amount = amount;
+                        newEntry.to = transactionReceipt.to;
+                        newEntry.from = transactionReceipt.from;
+                        newEntry.erc20from = tokenFrom;
+                        newEntry.erc20to = tokenTo;
+                        await addERC20TransactionEntry(newEntry);
+                        console.log(`Glm transfer from ${tokenFrom} to ${tokenTo}. Amount ${amount}`);
+                    }
+                } catch (e) {
+                    //ignore
+                    //console.log(e);
+                }
+            }
+        }
+
+        if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
+
+
+        }
 
         for (let log of transactionReceipt.logs) {
             try {
 
-                let parsed = this.interfaceForLogParsing.parseLog(log);
+                let parsed = ERC20interface.parseLog(log);
                 if (parsed.name == "Transfer") {
+                    //console.log("Block number: " + blockNumber);
+                    //console.log("Tx transaction: " + transactionReceipt.transactionHash);
+
                     let tokenFrom = parsed.args[0];
                     let tokenTo = parsed.args[1];
                     let amount = parsed.args[2];
@@ -237,7 +285,7 @@ export class ChainGasScanner {
                     addresses[tokenFrom] = 1;
                     addresses[tokenTo] = 1;
 
-                    if (tokenFrom.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf" || tokenTo.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
+                    if (tokenFrom.toString() === "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" || tokenTo.toString() === "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174") {
                         console.log(`From: ${tokenFrom}, To: ${tokenTo}, amount: ${amount.toString()}`);
                     }
 
@@ -270,7 +318,7 @@ export class ChainGasScanner {
                             //console.error("Cannot get transaction receipt + " + transaction);
                             continue;
                         }
-                        this.processTransactionReceipt(transactionReceipt);
+                        await this.processTransactionReceipt(transactionReceipt);
                         this.chainScannerStatus.processedTransactionCount += 1;
                     }
                     let droppedTransactions = this.chainScannerStatus.totalTransactionCount - this.chainScannerStatus.processedTransactionCount;

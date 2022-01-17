@@ -3,13 +3,15 @@ import { BlockInfo } from "./model/BlockInfo";
 import { TimeFrameBlockData } from "./model/TimeFrameBlockData";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
+import {TransactionERC20Entry} from "./model/TransactionEntry";
 
 
 export const collections: {
     blockInfoCollection?: mongoDB.Collection,
     timeFrameInfoCollection?: mongoDB.Collection,
     histogramCollection?: mongoDB.Collection,
-    timeFrameBlockDataCollection?: mongoDB.Collection
+    timeFrameBlockDataCollection?: mongoDB.Collection,
+    erc20Transactions?: mongoDB.Collection
 } = {}
 
 
@@ -30,6 +32,7 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     collections.timeFrameInfoCollection = db.collection("TimeFrameInfo");
     collections.histogramCollection = db.collection("Histograms");
     collections.timeFrameBlockDataCollection = db.collection("TimeFrameBlockData");
+    collections.erc20Transactions = db.collection("ERC20Transaction");
 
     return client;
 }
@@ -179,5 +182,25 @@ export async function clearDatabase() {
     }
 }
 
+
+export async function addERC20TransactionEntry(entry: TransactionERC20Entry) {
+    if (collections.erc20Transactions !== undefined) {
+        const el = await collections.erc20Transactions.findOne({
+            txid: entry.txid,
+        });
+        if (el == null) {
+            const result = await collections.erc20Transactions.insertOne(entry);
+        } else {
+            //TODO - reduce unnecessery updates by comparing objects
+            /*const entryClone = Object.assign({}, entry);
+            //@ts-ignore
+            entryClone._id = el._id;
+            if (JSON.stringify(entryClone) != JSON.stringify(el)) {
+                //console.log("No need updating object: " + JSON.stringify(entryClone));
+            }*/
+            const result = await collections.erc20Transactions.replaceOne({ _id: el._id }, entry);
+        }
+    }
+}
 
 
