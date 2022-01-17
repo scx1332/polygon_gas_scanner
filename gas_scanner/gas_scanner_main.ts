@@ -1,4 +1,4 @@
-import { ChainGasScanner } from "./gas_scanner";
+import { ChainGasScanner } from "./src/gas_scanner";
 import { delay } from "./utils";
 import * as dotenv from 'dotenv';
 import { parse } from 'ts-command-line-args';

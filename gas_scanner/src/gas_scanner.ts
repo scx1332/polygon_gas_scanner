@@ -1,13 +1,14 @@
 import { TransactionReceipt } from "@ethersproject/abstract-provider";
-import { bignumberToGwei, delay } from "./utils";
+import { bignumberToGwei, delay } from "../utils";
 import * as ethers from "ethers";
+import IERC20_abi from "./contracts/IERC20.abi.json";
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
-import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./src/mongo_connector";
-import { BlockInfo } from "./src/model/BlockInfo";
-import { ChainGasScannerStatus } from "./src/model/ChainGasScannerStatus";
-import { TimeFrameStatistics } from "./src/model/TimeFrameStatistics";
-import { MinGasBlocksHistogram } from "./src/model/MinGasBlocksHistogram";
+import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./mongo_connector";
+import { BlockInfo } from "./model/BlockInfo";
+import { ChainGasScannerStatus } from "./model/ChainGasScannerStatus";
+import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
+import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
 
 
 export class ChainGasScanner {
@@ -27,6 +28,9 @@ export class ChainGasScanner {
     startingBlockNumber: number = 0;
     blockNumber: number = 0;
     blockTime: string = "";
+
+
+    interfaceForLogParsing = new ethers.utils.Interface(IERC20_abi);
 
     constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
@@ -220,6 +224,34 @@ export class ChainGasScanner {
                 //console.log(e);
             }
         }*/
+
+        for (let log of transactionReceipt.logs) {
+            try {
+
+                let parsed = this.interfaceForLogParsing.parseLog(log);
+                if (parsed.name == "Transfer") {
+                    let tokenFrom = parsed.args[0];
+                    let tokenTo = parsed.args[1];
+                    let amount = parsed.args[2];
+                    transferCount += 1;
+                    addresses[tokenFrom] = 1;
+                    addresses[tokenTo] = 1;
+
+                    if (tokenFrom.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf" || tokenTo.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
+                        console.log(`From: ${tokenFrom}, To: ${tokenTo}, amount: ${amount.toString()}`);
+                    }
+
+                }
+            } catch (e) {
+                //ignore
+                //console.log(e);
+            }
+        }
+        if (transferCount >= 2 && transferCount <= 3) {
+            for (let address in addresses) {
+                //console.log(address);
+            }
+        }
         if (transferCount >= 2 && transferCount <= 3) {
             for (let address in addresses) {
                 //console.log(address);
