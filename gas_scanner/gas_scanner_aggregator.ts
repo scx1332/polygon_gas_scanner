@@ -5,9 +5,9 @@ import {
     getBlockEntriesNewerThan
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
-import {TimeFrameBlockData} from "./src/model/TimeFrameBlockData";
-import {BlockInfo} from "./src/model/BlockInfo";
-import {delay} from "./utils";
+import { TimeFrameBlockData } from "./src/model/TimeFrameBlockData";
+import { BlockInfo } from "./src/model/BlockInfo";
+import { delay } from "./utils";
 
 
 dotenv.config();
@@ -42,7 +42,7 @@ function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo
     }
 }
 
-function getDateFloor(date: Date, unit: string, units: number) : {date: Date, timeSpanSeconds: number} {
+function getDateFloor(date: Date, unit: string, units: number): { date: Date, timeSpanSeconds: number } {
     let years = date.getUTCFullYear();
     let months = date.getUTCMonth();
     let days = date.getUTCDate();
@@ -72,10 +72,10 @@ function getDateFloor(date: Date, unit: string, units: number) : {date: Date, ti
         timeSpanSeconds = 24 * 3600 * units;
     }
     let res = new Date(Date.UTC(years, months, days, hours, minutes, seconds, 0));
-    return {date: res, timeSpanSeconds: timeSpanSeconds};
+    return { date: res, timeSpanSeconds: timeSpanSeconds };
 }
 
-async function aggregate(blocks : Array<BlockInfo>, timeFrameUnit: string, timeFrameUnits: number) {
+async function aggregate(blocks: Array<BlockInfo>, timeFrameUnit: string, timeFrameUnits: number) {
     let startTime = new Date();
     let tfs = new TimeFrameBlockData();
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx += 1) {

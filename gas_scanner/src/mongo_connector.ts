@@ -1,8 +1,8 @@
 import * as mongoDB from "mongodb";
-import {BlockInfo} from "./model/BlockInfo";
-import {TimeFrameBlockData} from "./model/TimeFrameBlockData";
-import {TimeFrameStatistics} from "./model/TimeFrameStatistics";
-import {MinGasBlocksHistogram} from "./model/MinGasBlocksHistogram";
+import { BlockInfo } from "./model/BlockInfo";
+import { TimeFrameBlockData } from "./model/TimeFrameBlockData";
+import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
+import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
 
 
 export const collections: {
@@ -58,7 +58,7 @@ export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
 export async function getLastTimeframes(num: number, timeSpanSeconds: number): Promise<Array<TimeFrameBlockData>> {
     let array = new Array<TimeFrameBlockData>();
     if (collections.timeFrameBlockDataCollection !== undefined) {
-        const result = await collections.timeFrameBlockDataCollection.find({timeSpanSeconds: {"$eq": timeSpanSeconds}}).sort({ timeFrameStart: -1 }).limit(num).toArray();
+        const result = await collections.timeFrameBlockDataCollection.find({ timeSpanSeconds: { "$eq": timeSpanSeconds } }).sort({ timeFrameStart: -1 }).limit(num).toArray();
         for (let res of result) {
             array.push(Object.assign(new TimeFrameBlockData(), res));
         }

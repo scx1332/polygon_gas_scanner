@@ -4,10 +4,10 @@ import * as ethers from "ethers";
 import * as mongoDB from "mongodb";
 import { BlockList } from "net";
 import { addBlockEntry, getLastBlockEntry, updateHistEntry, updateTimeFrameEntry } from "./src/mongo_connector";
-import {BlockInfo} from "./src/model/BlockInfo";
-import {ChainGasScannerStatus} from "./src/model/ChainGasScannerStatus";
-import {TimeFrameStatistics} from "./src/model/TimeFrameStatistics";
-import {MinGasBlocksHistogram} from "./src/model/MinGasBlocksHistogram";
+import { BlockInfo } from "./src/model/BlockInfo";
+import { ChainGasScannerStatus } from "./src/model/ChainGasScannerStatus";
+import { TimeFrameStatistics } from "./src/model/TimeFrameStatistics";
+import { MinGasBlocksHistogram } from "./src/model/MinGasBlocksHistogram";
 
 
 export class ChainGasScanner {

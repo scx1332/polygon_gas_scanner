@@ -44,7 +44,7 @@ class Watchdog {
         console.log(data.toString().trimEnd());
     }
 
-    startProcessPrivate(commandLine: string) : ChildProcess {
+    startProcessPrivate(commandLine: string): ChildProcess {
         let useShell = (process.platform == "win32");
         let command_string = commandLine.trim().replace("  ", " ");
         log.info("Starting command: " + command_string);
