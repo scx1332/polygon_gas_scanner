@@ -11,7 +11,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 //@ts-ignore
-import timeFrameProvider from "../provider/TimeFrameProvider";
+import timeFrameProvider, {TimeFrameProviderResult} from "../provider/TimeFrameProvider";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -57,7 +57,8 @@ class TimeFrameData {
 class GasChartAverageState {
     seconds: number = 0;
     chartData: any;
-    isLoading: boolean = true;
+    isLoading = true;
+    error = "";
 }
 
 export class GasChartAverageTimeFrame extends React.Component {
@@ -68,15 +69,14 @@ export class GasChartAverageTimeFrame extends React.Component {
         this.state.chartData = defaultData;
     }
 
-    updateTimeFrameData(timeFrameData : Array<TimeFrameData>) {
+    updateTimeFrameData(timeFrameDataResult : TimeFrameProviderResult) {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = new Array<string>();
+        let timeFrameData = timeFrameDataResult.timeFrameData;
 
-        let lastBlockAvgStart = 0;
         let aggregateCount = 0;
         let minimumGas = 0;
-        let groupCount = 30;
         for (let blockDataIdx = Math.max(0, timeFrameData.length - 24); blockDataIdx < timeFrameData.length; blockDataIdx += 1) {
             let blockEntry = timeFrameData[blockDataIdx];
 
@@ -98,9 +98,9 @@ export class GasChartAverageTimeFrame extends React.Component {
                 backgroundColor: backgroundColors
             }
         ];
+        console.log("Setting state");
 
-        this.setState({chartData: {labels: labels, datasets: datasets, isLoading: false}});
-        console.log("Update block data: " + timeFrameData);
+        this.setState({chartData: {labels: labels, datasets: datasets}, isLoading: false, error: timeFrameDataResult.error});
     }
 
     async fetchPrices() {
@@ -150,9 +150,13 @@ export class GasChartAverageTimeFrame extends React.Component {
                 </div>
                 <div>
                     {this.state.isLoading &&
-                      <div>Cannot load data</div>
+                      <div>Loading data...</div>
                     }
-                    {!this.state.isLoading &&
+                    {this.state.error &&
+                      <div>Error: {this.state.error}</div>
+                    }
+
+                    {!this.state.isLoading && !this.state.error &&
                       <Bar options={{
                           animation: {
                               duration: 0,

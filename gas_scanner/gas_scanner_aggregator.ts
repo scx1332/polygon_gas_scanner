@@ -2,7 +2,6 @@ import { Logger } from "tslog";
 import {
     addTimeBlockDataEntry,
     connectToDatabase,
-    getBlockEntriesInRange,
     getBlockEntriesNewerThan
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
@@ -126,10 +125,11 @@ async function main() {
 
     while (true) {
         //2 hours behind
-        let dt = new Date(Date.now() - 2 * 3600 * 1000);
+        let dt = new Date(Date.now() - 4 * 3600 * 1000);
 
 
         let blocks = await getBlockEntriesNewerThan(dt);
+        log.info(`There are ${blocks.length} returned by the database to analyze`);
 
         let params = [
             {

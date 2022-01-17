@@ -1,10 +1,19 @@
-
-class TimeFrameData {
+export class TimeFrameDataEntry {
     timeFrameStart: string = "";
     gasUsed: number = 0;
     gasLimit: number = 0;
-
 }
+
+export class TimeFrameProviderResult {
+    timeFrameData = new Array<TimeFrameDataEntry>();
+    error: string = "";
+
+    constructor(timeFrameData: Array<TimeFrameDataEntry>, error: string) {
+        this.timeFrameData = timeFrameData;
+        this.error = error;
+    }
+}
+
 
 const defaultData =
     [
@@ -21,7 +30,7 @@ export class TimeFrameProvider {
 
     data = defaultData;
 
-    timeFrameData = new Array<TimeFrameData>();
+    timeFrameData = new Array<TimeFrameDataEntry>();
 
     constructor() {
         this.interval = setInterval(async () => await this.tick(), 2000);
@@ -43,20 +52,26 @@ export class TimeFrameProvider {
     }
 
     async tick() {
-        let timeFrameData = await this.fetchLastTimeFrames();
-        console.log("TimeFrameProvider: " + timeFrameData);
-        if (Array.isArray(timeFrameData)) {
-            timeFrameData.sort((firstEl, secondEl) => firstEl.timeFrameStart.localeCompare(secondEl.timeFrameStart) );
+        try {
+            let timeFrameData = await this.fetchLastTimeFrames();
+            console.log("TimeFrameProvider: " + timeFrameData);
+            if (Array.isArray(timeFrameData) && timeFrameData.length > 0) {
+                timeFrameData.sort((firstEl, secondEl) => firstEl.timeFrameStart.localeCompare(secondEl.timeFrameStart) );
 
-            if (timeFrameData.length > 0) {
                 this.timeFrameData = timeFrameData;
-                this.notify(this.timeFrameData);
+
+                this.notify(new TimeFrameProviderResult(timeFrameData, ""));
             }
+            else {
+                this.notify(new TimeFrameProviderResult(this.timeFrameData, "Data source responded with empty data"));
+            }
+        } catch (ex) {
+            this.notify(new TimeFrameProviderResult(this.timeFrameData, `Error when downloading data from datasource: ${ex}`));
         }
     }
 
-    notify(timeFrameData : Array<TimeFrameData>) {
-        this.observers.forEach(observer => observer.updateTimeFrameData(timeFrameData));
+    notify(timeFrameDataResult : TimeFrameProviderResult) {
+        this.observers.forEach(observer => observer.updateTimeFrameData(timeFrameDataResult));
     }
 }
 const timeFrameProvider = new TimeFrameProvider();

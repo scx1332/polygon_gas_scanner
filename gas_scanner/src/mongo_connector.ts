@@ -120,6 +120,13 @@ export async function addTimeBlockDataEntry(entry: TimeFrameBlockData) {
         if (el == null) {
             const result = await collections.timeFrameBlockDataCollection.insertOne(entry);
         } else {
+            //TODO - reduce unnecessery updates by comparing objects
+            /*const entryClone = Object.assign({}, entry);
+            //@ts-ignore
+            entryClone._id = el._id;
+            if (JSON.stringify(entryClone) != JSON.stringify(el)) {
+                //console.log("No need updating object: " + JSON.stringify(entryClone));
+            }*/
             const result = await collections.timeFrameBlockDataCollection.replaceOne({ _id: el._id }, entry);
         }
     }
