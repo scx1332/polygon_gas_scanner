@@ -91,9 +91,9 @@ export class App extends React.Component {
             <div className="average-gas-chart">
               <GasChartAverage></GasChartAverage>
             </div>
-              {/*<div className="average-gas-chart">
+              <div className="average-gas-chart">
               <GasChartAverageTimeFrame></GasChartAverageTimeFrame>
-            </div>*/}
+            </div>
 
 
             <div className="block-list-component">

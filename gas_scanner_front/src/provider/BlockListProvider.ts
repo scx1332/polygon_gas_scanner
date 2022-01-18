@@ -46,8 +46,8 @@ export class BlockListProvider {
 
     async fetchLastBlocks() : Promise<Array<BlockDataEntry>> {
         let lastBLocks = 10;
-        if (this.blockData.length < 1000) {
-          lastBLocks = 2000;
+        if (this.blockData.length < 100) {
+          lastBLocks = 200;
 
         }
         const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

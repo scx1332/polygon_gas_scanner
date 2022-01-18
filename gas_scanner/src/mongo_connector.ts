@@ -5,6 +5,7 @@ import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
 import {TransactionERC20Entry} from "./model/TransactionEntry";
 import {MonitoredAddress} from "./model/MonitoredAddresses";
+import {IndexSpecification} from "mongodb";
 
 
 export const collections: {
@@ -36,6 +37,25 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     collections.timeFrameBlockDataCollection = db.collection("TimeFrameBlockData");
     collections.erc20Transactions = db.collection("ERC20Transaction");
     collections.monitoredAddresses = db.collection("MonitoredAddress");
+
+    await collections.blockInfoCollection.createIndex(  { "blockNo": 1 },{ unique: true });
+    await collections.blockInfoCollection.createIndex(  { "blockTime": 1 },{ unique: false });
+
+    await collections.timeFrameBlockDataCollection.createIndex(  { "timeFrameStart": 1 },{ unique: false });
+    await collections.timeFrameBlockDataCollection.createIndex(  { "timeSpanSeconds": 1 },{ unique: false });
+    await collections.timeFrameBlockDataCollection.createIndex(  { "timeFrameStart": 1, "timeSpanSeconds": 1 },{ unique: true });
+
+    await collections.erc20Transactions.createIndex(  { "txid": 1 },{ unique: true });
+    await collections.erc20Transactions.createIndex(  { "from": 1 },{ unique: false });
+    await collections.erc20Transactions.createIndex(  { "erc20from": 1 },{ unique: false });
+
+    await collections.monitoredAddresses.createIndex(  { "address": 1 },{ unique: true });
+
+    let indexList = await collections.blockInfoCollection.indexes();
+
+    for (let i of indexList) {
+        console.log(i);
+    }
 
     return client;
 }
