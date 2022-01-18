@@ -88,6 +88,9 @@ export class App extends React.Component {
               <div className="current-gas-chart">
               <GasChart></GasChart>
             </div>
+              <div className="current-gas-chart">
+                  <GasChart></GasChart>
+              </div>
             <div className="average-gas-chart">
               <GasChartAverage></GasChartAverage>
             </div>

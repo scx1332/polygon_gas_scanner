@@ -2,6 +2,7 @@ export class TimeFrameDataEntry {
     timeFrameStart: string = "";
     gasUsed: number = 0;
     gasLimit: number = 0;
+    minGas: number = 0;
 }
 
 export class TimeFrameProviderResult {

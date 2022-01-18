@@ -51,11 +51,13 @@ class GasChartState {
     seconds: number = 0;
     chartData: any;
     displayMode: string;
+    numberOnChart: number;
 
-    constructor(seconds: number, chartData: any, displayMode: string) {
+    constructor(seconds: number, chartData: any, displayMode: string, numberOnChart: number) {
         this.seconds = seconds;
         this.chartData = chartData;
         this.displayMode = displayMode;
+        this.numberOnChart = numberOnChart;
     }
 }
 
@@ -67,7 +69,7 @@ export class GasChart extends React.Component {
 
     constructor(props : any) {
         super(props);
-        this.state = new GasChartState(0, defaultData, "total_fee");
+        this.state = new GasChartState(0, defaultData, "total_fee", 50);
     }
     updateBlockList(blockListProviderResult: BlockListProviderResult) {
         this.lastResult = blockListProviderResult;
@@ -80,7 +82,7 @@ export class GasChart extends React.Component {
         let backgroundColors = [];
         let blockData = blockListProviderResult.blockData;
 
-        for (let blockEntry of blockData.slice(blockData.length - 50)) {
+        for (let blockEntry of blockData.slice(blockData.length - this.state.numberOnChart)) {
             labels.push(blockEntry.blockNo);
             if (this.state.displayMode == "total_fee") {
                 minGasArray.push(blockEntry.minGas);
@@ -107,7 +109,7 @@ export class GasChart extends React.Component {
             }
         ];
 
-        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode));
+        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart));
         //console.log("Update block data: " + blockData);
     }
 
@@ -150,24 +152,50 @@ export class GasChart extends React.Component {
             .join(':');
     }
     handleClick(displayMode:string) {
-        this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode), () => {
+        this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart), () => {
             if (this.lastResult)
             {
                 this.updateBlockListPrivate(this.lastResult);
             }
             }); // needs to do -1 if the button is clicked already
         }
+    handleClick2(number:number) {
+        this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, number), () => {
+            if (this.lastResult)
+            {
+                this.updateBlockListPrivate(this.lastResult);
+            }
+        }); // needs to do -1 if the button is clicked already
+    }
+
+    getTitle() {
+
+        if (this.state.displayMode == "priority_fee") {
+            return "Priority fee live";
+        }
+        if (this.state.displayMode == "base_fee") {
+            return "Base fee live";
+        }
+        if (this.state.displayMode == "total_fee") {
+            return "Total fee live";
+        }
+
+
+    }
 
     render() {
         return (
             <div>
                 <div>
-                    <h1>Live chart data</h1> (Timer: {this.formatTime(this.state.seconds)})
+                    <h1> {this.getTitle()}</h1> (Timer: {this.formatTime(this.state.seconds)})
                 </div>
                 <div>
                     <button onClick={this.handleClick.bind(this, "priority_fee")}>Priority fee</button>
                     <button onClick={this.handleClick.bind(this, "base_fee")}>Base fee</button>
                     <button onClick={this.handleClick.bind(this, "total_fee")}>Total fee</button>
+                    <button onClick={this.handleClick2.bind(this, 20)}>20</button>
+                    <button onClick={this.handleClick2.bind(this, 50)}>50</button>
+                    <button onClick={this.handleClick2.bind(this, 100)}>100</button>
                 </div>
                 <div>
                     <Bar options={{animation: {

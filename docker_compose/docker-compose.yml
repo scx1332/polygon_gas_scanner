@@ -16,7 +16,9 @@ services:
 
       AGGREGATOR_DELAY_START: 60
       AGGREGATOR_DELAY_SECONDS: 60
-
+      
+      COLD_START_BLOCK: 23850000
+      
       WATCHDOG_START_AGGREGATOR: node dist/gas_scanner_aggregator.js
       WATCHDOG_START_SERVER: node dist/gas_scanner_server.js
       WATCHDOG_START_COMMAND: node dist/gas_scanner_main.js --fillMissingBlocks

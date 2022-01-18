@@ -45,7 +45,11 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
 
     if (args.fillMissingBlocks) {
         startingBlockNumber = await getLastBlockEntry();
+        if (startingBlockNumber == -1 && process.env.COLD_START_BLOCK) {
+            startingBlockNumber = parseInt(process.env.COLD_START_BLOCK);
+        }
     }
+
 
     let p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
 

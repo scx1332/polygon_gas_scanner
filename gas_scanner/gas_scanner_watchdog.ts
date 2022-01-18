@@ -106,6 +106,7 @@ class Watchdog {
     }
 
     async monitorGasScannerProcess() {
+        let lastDifferenceInSeconds = 0;
         while (true) {
             if (!this.gas_scanner_process) {
                 this.startGasScannerProcess();
@@ -124,9 +125,10 @@ class Watchdog {
 
             let differenceInSeconds = (dtNow - dt) / 1000.0;
 
-            if (differenceInSeconds > this.allowed_seconds_behind) {
+            if (differenceInSeconds > this.allowed_seconds_behind && differenceInSeconds > lastDifferenceInSeconds && lastDifferenceInSeconds != 0) {
                 await this.killProcess();
             }
+            lastDifferenceInSeconds = differenceInSeconds;
 
             log.debug(`Last update is ${differenceInSeconds} seconds old`);
         }

@@ -86,7 +86,7 @@ export class GasChartAverageTimeFrame extends React.Component {
             } else {
                 labels.push(moment(dt).format("HH:mm"));
             }
-            minGasArray.push(blockEntry.gasUsed / blockEntry.gasLimit);
+            minGasArray.push(blockEntry.minGas);
             backgroundColors.push("black");
             aggregateCount = 0;
             minimumGas = 0;
