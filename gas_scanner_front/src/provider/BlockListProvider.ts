@@ -4,6 +4,7 @@ export class BlockDataEntry {
     gasUsed: number = 0;
     gasLimit: number = 0;
     blockTime: string = "";
+    baseFeePrice: number = 0;
 }
 
 export class BlockListProviderResult {

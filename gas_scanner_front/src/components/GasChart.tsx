@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 // @ts-ignore
-import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
+import blockListProvider, {BlockDataEntry, BlockListProviderResult} from "../provider/BlockListProvider";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -50,19 +50,31 @@ const defaultData = {
 class GasChartState {
     seconds: number = 0;
     chartData: any;
+    displayMode: string;
+
+    constructor(seconds: number, chartData: any, displayMode: string) {
+        this.seconds = seconds;
+        this.chartData = chartData;
+        this.displayMode = displayMode;
+    }
 }
 
 
 export class GasChart extends React.Component {
-    state = new GasChartState();
+    state : GasChartState;
+
+    lastResult : BlockListProviderResult | undefined;
 
     constructor(props : any) {
         super(props);
-        this.state = new GasChartState();
-        this.state.chartData = defaultData;
+        this.state = new GasChartState(0, defaultData, "total_fee");
+    }
+    updateBlockList(blockListProviderResult: BlockListProviderResult) {
+        this.lastResult = blockListProviderResult;
+        this.updateBlockListPrivate(this.lastResult);
     }
 
-    updateBlockList(blockListProviderResult: BlockListProviderResult) {
+    updateBlockListPrivate(blockListProviderResult: BlockListProviderResult) {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = [];
@@ -70,8 +82,18 @@ export class GasChart extends React.Component {
 
         for (let blockEntry of blockData.slice(blockData.length - 50)) {
             labels.push(blockEntry.blockNo);
-            minGasArray.push(blockEntry.minGas);
-            if (blockEntry.gasUsed / blockEntry.gasLimit < 0.95) {
+            if (this.state.displayMode == "total_fee") {
+                minGasArray.push(blockEntry.minGas);
+            }
+            if (this.state.displayMode == "base_fee") {
+                minGasArray.push(blockEntry.baseFeePrice);
+            }
+            if (this.state.displayMode == "priority_fee") {
+                minGasArray.push(blockEntry.minGas - blockEntry.baseFeePrice);
+            }
+
+
+            if (blockEntry.gasUsed / blockEntry.gasLimit < 0.51) {
                 backgroundColors.push("green");
             } else {
                 backgroundColors.push("red");
@@ -85,8 +107,8 @@ export class GasChart extends React.Component {
             }
         ];
 
-        this.setState({chartData: {labels: labels, datasets: datasets}});
-        console.log("Update block data: " + blockData);
+        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode));
+        //console.log("Update block data: " + blockData);
     }
 
     async fetchPrices() {
@@ -127,12 +149,25 @@ export class GasChart extends React.Component {
             .filter((v,i) => v !== '00' || i > 0)
             .join(':');
     }
+    handleClick(displayMode:string) {
+        this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode), () => {
+            if (this.lastResult)
+            {
+                this.updateBlockListPrivate(this.lastResult);
+            }
+            }); // needs to do -1 if the button is clicked already
+        }
 
     render() {
         return (
             <div>
                 <div>
                     <h1>Live chart data</h1> (Timer: {this.formatTime(this.state.seconds)})
+                </div>
+                <div>
+                    <button onClick={this.handleClick.bind(this, "priority_fee")}>Priority fee</button>
+                    <button onClick={this.handleClick.bind(this, "base_fee")}>Base fee</button>
+                    <button onClick={this.handleClick.bind(this, "total_fee")}>Total fee</button>
                 </div>
                 <div>
                     <Bar options={{animation: {

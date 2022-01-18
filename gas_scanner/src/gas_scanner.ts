@@ -149,6 +149,9 @@ export class ChainGasScanner {
                     blockInfo.gasLimit = block.gasLimit.toNumber();
                     blockInfo.transCount = block.transactions.length;
                     blockInfo.blockTime = new Date(block.timestamp * 1000).toISOString();
+                    if (block.baseFeePerGas) {
+                        blockInfo.baseFeePrice = bignumberToGwei(block.baseFeePerGas);
+                    }
                     this.blockMap.set(this.blockNumber, blockInfo);
                 }
 
@@ -207,6 +210,7 @@ export class ChainGasScanner {
         let addresses: { [address: string]: number } = {};
         //console.log("Gas price: " + transactionReceipt.effectiveGasPrice);
 
+
         let blockNumber = transactionReceipt.blockNumber;
 
         let blockInfo = this.blockMap.get(blockNumber);
@@ -231,6 +235,18 @@ export class ChainGasScanner {
         }
         blockInfo.blockNo = transactionReceipt.blockNumber;
         blockInfo.gasUsed += transactionReceipt.gasUsed.toNumber();
+        let burnedFees = blockInfo.baseFeePrice * transactionReceipt.gasUsed.toNumber() * 1.0E-9;
+        let totalFees = bignumberToGwei(transactionReceipt.effectiveGasPrice) * transactionReceipt.gasUsed.toNumber() * 1.0E-9;
+
+        if (transactionReceipt.type == 2) {
+            blockInfo.transCount2 += 1;
+            blockInfo.gasUsed2 += 1;
+        }
+        blockInfo.burnedFees += burnedFees;
+        blockInfo.totalFees += totalFees;
+
+
+
 
         /*for (let log of transactionReceipt.logs) {
             try {
