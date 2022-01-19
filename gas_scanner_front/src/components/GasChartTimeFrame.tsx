@@ -103,27 +103,6 @@ export class GasChartAverageTimeFrame extends React.Component {
         this.setState({chartData: {labels: labels, datasets: datasets}, isLoading: false, error: timeFrameDataResult.error});
     }
 
-    async fetchPrices() {
-        //const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
-        const res = await fetch("");
-        const data = await res.json();
-        console.log(data);
-        return {
-            labels: data.blockNums,
-            datasets: [{
-                label: "Min gas",
-                data: data.minGas,
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            },
-            {
-                label: "Usage",
-                data: data.blockFill,
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            },
-            ]
-        };
-    }
-
     componentDidMount() {
         timeFrameProvider.attach(this);
     }

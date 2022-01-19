@@ -29,6 +29,8 @@ import {
     AccordionItem,
     Text
 } from "@chakra-ui/react";
+import timeFrameProvider, {TimeFrameProviderResult} from "../provider/TimeFrameProvider";
+import moment from "moment";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -69,12 +71,14 @@ class GasChartState {
     chartData: any;
     displayMode: string;
     numberOnChart: number;
+    chartMode: string;
 
-    constructor(seconds: number, chartData: any, displayMode: string, numberOnChart: number) {
+    constructor(seconds: number, chartData: any, displayMode: string, numberOnChart: number, chartMode: string) {
         this.seconds = seconds;
         this.chartData = chartData;
         this.displayMode = displayMode;
         this.numberOnChart = numberOnChart;
+        this.chartMode = chartMode;
     }
 }
 
@@ -83,14 +87,25 @@ export class GasChart extends React.Component {
     state : GasChartState;
 
     lastResult : BlockListProviderResult | undefined;
+    lastTimeFrameResult: TimeFrameProviderResult | undefined;
 
     constructor(props : any) {
         super(props);
-        this.state = new GasChartState(0, defaultData, "total_fee", 50);
+        this.state = new GasChartState(0, defaultData, "total_fee", 50, "minute_1");
     }
+    isChartLive() {
+        return this.state.chartMode == "block_1";
+    }
+    isChartAverage() {
+        return this.state.chartMode == "minute_1" || this.state.chartMode == "hour_1";
+    }
+
+
     updateBlockList(blockListProviderResult: BlockListProviderResult) {
         this.lastResult = blockListProviderResult;
-        this.updateBlockListPrivate(this.lastResult);
+        if (this.isChartLive()) {
+            this.updateBlockListPrivate(this.lastResult);
+        }
     }
 
     private getActiveColor() {
@@ -98,6 +113,15 @@ export class GasChart extends React.Component {
     }
     private getPassiveColor() {
         return "#705E78";
+    }
+
+    private updateChartPrivate() {
+        if (this.isChartLive() && this.lastResult) {
+            this.updateBlockListPrivate(this.lastResult);
+        }
+        else if (this.isChartAverage() && this.lastTimeFrameResult) {
+            this.updateTimeFrameDataPrivate(this.lastTimeFrameResult);
+        }
     }
 
     //#F3FEB0
@@ -138,37 +162,85 @@ export class GasChart extends React.Component {
 
         ];
 
-        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart));
+        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart, this.state.chartMode));
         //console.log("Update block data: " + blockData);
+    }
+    updateTimeFrameData(timeFrameDataResult : TimeFrameProviderResult) {
+        this.lastTimeFrameResult = timeFrameDataResult;
+
+        if (this.isChartAverage()) {
+            this.updateTimeFrameDataPrivate(timeFrameDataResult);
+        }
+    }
+
+    updateTimeFrameDataPrivate(timeFrameDataResult : TimeFrameProviderResult) {
+        let labels = [];
+        let minGasArray = [];
+        let backgroundColors = new Array<string>();
+        let timeFrameData = timeFrameDataResult.timeFrameData;
+
+        let aggregateCount = 0;
+        let minimumGas = 0;
+        for (let blockDataIdx = Math.max(0, timeFrameData.length - 24); blockDataIdx < timeFrameData.length; blockDataIdx += 1) {
+            let blockEntry = timeFrameData[blockDataIdx];
+
+            let dt = new Date(blockEntry.timeFrameStart);
+            if (dt.getHours() == 0) {
+                labels.push(moment(dt).format("MMM-DD HH:mm"));
+            } else {
+                labels.push(moment(dt).format("HH:mm"));
+            }
+            minGasArray.push(blockEntry.minGas);
+            backgroundColors.push("black");
+            aggregateCount = 0;
+            minimumGas = 0;
+        }
+        let datasets = [
+            {
+                label: "Min gas",
+                data: minGasArray,
+                backgroundColor: backgroundColors
+            }
+        ];
+        console.log("Setting state");
+
+        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart, this.state.chartMode))
     }
 
     public componentDidMount() {
         blockListProvider.attach(this);
+        timeFrameProvider.attach(this);
     }
 
     public componentWillUnmount() {
         blockListProvider.detach(this);
+        timeFrameProvider.detach(this);
+    }
+
+    private binCapacityChanged(binCapacity:string) {
+        this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, this.state.numberOnChart, binCapacity), () => {
+            this.updateChartPrivate();
+        }); // );
+
+
     }
 
     private displayModeChanged(displayMode:string) {
-        this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart), () => {
-            if (this.lastResult)
-            {
-                this.updateBlockListPrivate(this.lastResult);
-            }
+        this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart, this.state.chartMode), () => {
+            this.updateChartPrivate();
             }); // needs to do -1 if the button is clicked already
         }
     private displayCountChanged(number_str:string) {
         let number = parseInt(number_str);
-        this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, number), () => {
-            if (this.lastResult)
-            {
-                this.updateBlockListPrivate(this.lastResult);
-            }
+        this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, number, this.state.chartMode), () => {
+            this.updateChartPrivate();
         }); // needs to do -1 if the button is clicked already
     }
 
     private getTitle() {
+        if (this.isChartAverage()) {
+            return "Aggregated data";
+        }
 
         if (this.state.displayMode == "priority_fee") {
             return "Priority fee live";
@@ -200,12 +272,29 @@ export class GasChart extends React.Component {
         return (
             <Flex flex={1} flexDirection="column" gridGap="3" backgroundColor={"white"} padding={"15px"}>
                 <Flex flexDirection="row"  gridGap="3">
-                    <Flex flexDirection="row">
+                    <Flex flexDirection="column">
                         <Heading textColor={this.getPassiveColor()} as='h3' size='md'> {this.getTitle()}</Heading>
+                        {this.getLegend()}
                     </Flex>
                     <Spacer />
-                    {this.getLegend()}
 
+                    <Accordion allowToggle={true}>
+                        <AccordionItem>
+                            <AccordionButton>
+                                Bin size
+                                <AccordionIcon />
+                            </AccordionButton>
+                            <AccordionPanel pb={4}>
+                                <RadioGroup onChange={this.binCapacityChanged.bind(this)} value={this.state.chartMode}>
+                                    <Flex flexDirection="column"  gridGap="1">
+                                        <Radio value="block_1">1 Block</Radio>
+                                        <Radio value="minute_1">1 Minute</Radio>
+                                        <Radio value="hour_1">1 Hour</Radio>
+                                    </Flex>
+                                </RadioGroup>
+                            </AccordionPanel>
+                        </AccordionItem>
+                    </Accordion>
                     <Accordion allowToggle={true}>
                         <AccordionItem>
                             <AccordionButton>
