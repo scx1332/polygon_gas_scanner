@@ -21,7 +21,7 @@ import {BlockListProvider} from "./provider/BlockListProvider";
 import {GasChartAverage} from "./components/GasChartAverage";
 // @ts-ignore
 import {GasChartAverageTimeFrame} from "./components/GasChartTimeFrame";
-import { Flex } from "@chakra-ui/react";
+import {Flex, Heading, Link, Spacer} from "@chakra-ui/react";
 
 ChartJS.register(
     CategoryScale,
@@ -80,19 +80,30 @@ export class App extends React.Component {
 
   render() {
     return (
-        <div className="background">
-          <a href="http://localhost:7888/polygon/gas-info/waiting_times?block_start=23500795&block_count=1000000">API</a>
-          <div className="title">
-            <div>PolygonGas</div>
-          </div>
+        <Flex direction="column" padding="0px 20px" height="100%">
+
+          <Flex height="80px;">
+              <Flex align="center">
+                  <Heading>PolygonGas</Heading>
+              </Flex>
+              <Flex align="center">
+
+                <a href="http://localhost:7888/polygon/gas-info/waiting_times?block_start=23500795&block_count=1000000">API</a>
+              </Flex>
+              <Flex align="center" direction="column" padding="20px">
+                  <Flex>Sponsored by: </Flex>
+                  <Flex><Link href="https://golem.network">golem.network</Link></Flex>
+              </Flex>
+
+          </Flex>
            <Flex direction="column" shrink="0">
-              <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between">
+              <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between"  gridGap="5">
                   <GasChart ></GasChart>
                   <GasChart ></GasChart>
               </Flex>
 
            </Flex>
-        </div>
+        </Flex>
     );
   }
 }

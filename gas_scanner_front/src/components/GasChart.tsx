@@ -13,7 +13,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 // @ts-ignore
 import blockListProvider, {BlockDataEntry, BlockListProviderResult} from "../provider/BlockListProvider";
-import {Flex, Button} from "@chakra-ui/react";
+import {Flex, Spacer, Button, ButtonGroup, Heading, Radio, RadioGroup, Accordion, AccordionButton, AccordionPanel, Box, AccordionIcon, AccordionItem} from "@chakra-ui/react";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -46,6 +46,7 @@ const defaultData = {
         },
     ],
 };
+
 
 
 class GasChartState {
@@ -152,7 +153,7 @@ export class GasChart extends React.Component {
             .filter((v,i) => v !== '00' || i > 0)
             .join(':');
     }
-    private handleClick(displayMode:string) {
+    private displayModeChanged(displayMode:string) {
         this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart), () => {
             if (this.lastResult)
             {
@@ -160,7 +161,8 @@ export class GasChart extends React.Component {
             }
             }); // needs to do -1 if the button is clicked already
         }
-    private handleClick2(number:number) {
+    private displayCountChanged(number_str:string) {
+        let number = parseInt(number_str);
         this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, number), () => {
             if (this.lastResult)
             {
@@ -184,17 +186,46 @@ export class GasChart extends React.Component {
 
     render() {
         return (
-            <Flex flex={1} flexDirection="column">
-                <Flex flexDirection="row">
-                    <h1> {this.getTitle()}</h1> (Timer: {this.formatTime(this.state.seconds)})
-                </Flex>
-                <Flex flexDirection="row">
-                    <Button onClick={this.handleClick.bind(this, "priority_fee")}>Priority fee</Button>
-                    <Button onClick={this.handleClick.bind(this, "base_fee")}>Base fee</Button>
-                    <Button onClick={this.handleClick.bind(this, "total_fee")}>Total fee</Button>
-                    <Button onClick={this.handleClick2.bind(this, 20)}>20</Button>
-                    <Button onClick={this.handleClick2.bind(this, 50)}>50</Button>
-                    <Button onClick={this.handleClick2.bind(this, 100)}>100</Button>
+            <Flex flex={1} flexDirection="column" gridGap="3" backgroundColor={"white"} padding={"15px"}>
+                <Flex flexDirection="row"  gridGap="3">
+                    <Flex flexDirection="row">
+                        <Heading as='h3' size='md'> {this.getTitle()}</Heading>
+                    </Flex>
+                    <Spacer />
+                    <Accordion allowToggle={true}>
+                        <AccordionItem>
+                            <AccordionButton>
+                                Chart type
+                                <AccordionIcon />
+                            </AccordionButton>
+                            <AccordionPanel pb={4}>
+                                <RadioGroup onChange={this.displayModeChanged.bind(this)} value={this.state.displayMode}>
+                                    <Flex flexDirection="column"  gridGap="1">
+                                        <Radio value="priority_fee">Priority fee</Radio>
+                                        <Radio value="base_fee">Base fee</Radio>
+                                        <Radio value="total_fee">Total fee</Radio>
+                                    </Flex>
+                                </RadioGroup>
+                            </AccordionPanel>
+                        </AccordionItem>
+                    </Accordion>
+                    <Accordion allowToggle={true}>
+                        <AccordionItem>
+                            <AccordionButton>
+                                Capacity
+                                <AccordionIcon />
+                            </AccordionButton>
+                            <AccordionPanel pb={4}>
+                                <RadioGroup onChange={this.displayCountChanged.bind(this)} value={this.state.numberOnChart.toString()}>
+                                    <Flex flexDirection="column"  gridGap="1">
+                                        <Radio value="20">20</Radio>
+                                        <Radio value="50">50</Radio>
+                                        <Radio value="100">100</Radio>
+                                    </Flex>
+                                </RadioGroup>
+                            </AccordionPanel>
+                        </AccordionItem>
+                    </Accordion>
                 </Flex>
                 <Flex>
                     <Bar options={{animation: {
