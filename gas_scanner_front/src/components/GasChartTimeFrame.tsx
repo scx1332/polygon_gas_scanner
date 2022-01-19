@@ -73,7 +73,7 @@ export class GasChartAverageTimeFrame extends React.Component {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = new Array<string>();
-        let timeFrameData = timeFrameDataResult.timeFrameData;
+        let timeFrameData = timeFrameDataResult.timeFrameData60;
 
         let aggregateCount = 0;
         let minimumGas = 0;

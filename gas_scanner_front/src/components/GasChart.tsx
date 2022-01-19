@@ -177,7 +177,10 @@ export class GasChart extends React.Component {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = new Array<string>();
-        let timeFrameData = timeFrameDataResult.timeFrameData;
+        let timeFrameData = timeFrameDataResult.timeFrameData60;
+        if (this.state.chartMode == "hour_1") {
+            timeFrameData = timeFrameDataResult.timeFrameData3600;
+        }
 
         let aggregateCount = 0;
         let minimumGas = 0;

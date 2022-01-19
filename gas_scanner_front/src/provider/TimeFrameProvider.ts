@@ -6,11 +6,13 @@ export class TimeFrameDataEntry {
 }
 
 export class TimeFrameProviderResult {
-    timeFrameData = new Array<TimeFrameDataEntry>();
+    timeFrameData60 = new Array<TimeFrameDataEntry>();
+    timeFrameData3600 = new Array<TimeFrameDataEntry>();
     error: string = "";
 
-    constructor(timeFrameData: Array<TimeFrameDataEntry>, error: string) {
-        this.timeFrameData = timeFrameData;
+    constructor(timeFrameData60: Array<TimeFrameDataEntry>, timeFrameData3600: Array<TimeFrameDataEntry>, error: string) {
+        this.timeFrameData60 = timeFrameData60;
+        this.timeFrameData3600 = timeFrameData3600;
         this.error = error;
     }
 }
@@ -31,7 +33,8 @@ export class TimeFrameProvider {
 
     data = defaultData;
 
-    timeFrameData = new Array<TimeFrameDataEntry>();
+    timeFrameData60 = new Array<TimeFrameDataEntry>();
+    timeFrameData3600 = new Array<TimeFrameDataEntry>();
 
     constructor() {
         this.interval = setInterval(async () => await this.tick(), 2000);
@@ -43,31 +46,42 @@ export class TimeFrameProvider {
         this.observers = this.observers.filter(observer => observerToRemove !== observer);
     }
 
-    async fetchLastTimeFrames() {
+    async fetchLastTimeFrames(timespan_seconds: number) {
         let lastBLocks = 100;
         const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-        const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-time-frames?block_count=${lastBLocks}&timespan_seconds=60`);
+        const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-time-frames?block_count=${lastBLocks}&timespan_seconds=${timespan_seconds}`);
         let json_result = await res.json();
         return json_result;
         //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
     }
 
+
     async tick() {
         try {
-            let timeFrameData = await this.fetchLastTimeFrames();
-            console.log("TimeFrameProvider: " + timeFrameData);
-            if (Array.isArray(timeFrameData) && timeFrameData.length > 0) {
-                timeFrameData.sort((firstEl, secondEl) => firstEl.timeFrameStart.localeCompare(secondEl.timeFrameStart) );
+            let timeFrameData60 = await this.fetchLastTimeFrames(60);
+            let timeFrameData3600 = await this.fetchLastTimeFrames(3600);
+            console.log("TimeFrameProvider: " + timeFrameData60);
+            let succeeded = false;
+            if (Array.isArray(timeFrameData60) && timeFrameData60.length > 0) {
+                timeFrameData60.sort((firstEl, secondEl) => firstEl.timeFrameStart.localeCompare(secondEl.timeFrameStart) );
 
-                this.timeFrameData = timeFrameData;
+                this.timeFrameData60 = timeFrameData60;
+                succeeded = true;
+            }
+            if (Array.isArray(timeFrameData3600) && timeFrameData3600.length > 0) {
+                timeFrameData3600.sort((firstEl, secondEl) => firstEl.timeFrameStart.localeCompare(secondEl.timeFrameStart) );
 
-                this.notify(new TimeFrameProviderResult(timeFrameData, ""));
+                this.timeFrameData3600 = timeFrameData3600;
+                succeeded = true;
+            }
+            if (succeeded) {
+                this.notify(new TimeFrameProviderResult(this.timeFrameData60, this.timeFrameData3600, ""));
             }
             else {
-                this.notify(new TimeFrameProviderResult(this.timeFrameData, "Data source responded with empty data"));
+                this.notify(new TimeFrameProviderResult(this.timeFrameData60, this.timeFrameData3600, "Data source responded with empty data"));
             }
         } catch (ex) {
-            this.notify(new TimeFrameProviderResult(this.timeFrameData, `Error when downloading data from datasource: ${ex}`));
+            this.notify(new TimeFrameProviderResult(this.timeFrameData60, this.timeFrameData3600, `Error when downloading data from datasource: ${ex}`));
         }
     }
 
