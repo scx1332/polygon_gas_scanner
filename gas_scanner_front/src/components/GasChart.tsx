@@ -13,6 +13,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 // @ts-ignore
 import blockListProvider, {BlockDataEntry, BlockListProviderResult} from "../provider/BlockListProvider";
+import {Flex, Button} from "@chakra-ui/react";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -76,7 +77,7 @@ export class GasChart extends React.Component {
         this.updateBlockListPrivate(this.lastResult);
     }
 
-    updateBlockListPrivate(blockListProviderResult: BlockListProviderResult) {
+    private updateBlockListPrivate(blockListProviderResult: BlockListProviderResult) {
         let labels = [];
         let minGasArray = [];
         let backgroundColors = [];
@@ -113,7 +114,7 @@ export class GasChart extends React.Component {
         //console.log("Update block data: " + blockData);
     }
 
-    async fetchPrices() {
+    private async fetchPrices() {
         //const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
         const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
         const data = await res.json();
@@ -134,15 +135,15 @@ export class GasChart extends React.Component {
         };
     }
 
-    componentDidMount() {
+    public componentDidMount() {
         blockListProvider.attach(this);
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         blockListProvider.detach(this);
     }
 
-    formatTime(secs : number) {
+    private formatTime(secs : number) {
         let hours   = Math.floor(secs / 3600);
         let minutes = Math.floor(secs / 60) % 60;
         let seconds = secs % 60;
@@ -151,7 +152,7 @@ export class GasChart extends React.Component {
             .filter((v,i) => v !== '00' || i > 0)
             .join(':');
     }
-    handleClick(displayMode:string) {
+    private handleClick(displayMode:string) {
         this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart), () => {
             if (this.lastResult)
             {
@@ -159,7 +160,7 @@ export class GasChart extends React.Component {
             }
             }); // needs to do -1 if the button is clicked already
         }
-    handleClick2(number:number) {
+    private handleClick2(number:number) {
         this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, number), () => {
             if (this.lastResult)
             {
@@ -168,7 +169,7 @@ export class GasChart extends React.Component {
         }); // needs to do -1 if the button is clicked already
     }
 
-    getTitle() {
+    private getTitle() {
 
         if (this.state.displayMode == "priority_fee") {
             return "Priority fee live";
@@ -179,30 +180,28 @@ export class GasChart extends React.Component {
         if (this.state.displayMode == "total_fee") {
             return "Total fee live";
         }
-
-
     }
 
     render() {
         return (
-            <div>
-                <div>
+            <Flex flex={1} flexDirection="column">
+                <Flex flexDirection="row">
                     <h1> {this.getTitle()}</h1> (Timer: {this.formatTime(this.state.seconds)})
-                </div>
-                <div>
-                    <button onClick={this.handleClick.bind(this, "priority_fee")}>Priority fee</button>
-                    <button onClick={this.handleClick.bind(this, "base_fee")}>Base fee</button>
-                    <button onClick={this.handleClick.bind(this, "total_fee")}>Total fee</button>
-                    <button onClick={this.handleClick2.bind(this, 20)}>20</button>
-                    <button onClick={this.handleClick2.bind(this, 50)}>50</button>
-                    <button onClick={this.handleClick2.bind(this, 100)}>100</button>
-                </div>
-                <div>
+                </Flex>
+                <Flex flexDirection="row">
+                    <Button onClick={this.handleClick.bind(this, "priority_fee")}>Priority fee</Button>
+                    <Button onClick={this.handleClick.bind(this, "base_fee")}>Base fee</Button>
+                    <Button onClick={this.handleClick.bind(this, "total_fee")}>Total fee</Button>
+                    <Button onClick={this.handleClick2.bind(this, 20)}>20</Button>
+                    <Button onClick={this.handleClick2.bind(this, 50)}>50</Button>
+                    <Button onClick={this.handleClick2.bind(this, 100)}>100</Button>
+                </Flex>
+                <Flex>
                     <Bar options={{animation: {
                             duration: 0
                         }}} data={this.state.chartData}/>
-                </div>
-            </div>
+                </Flex>
+            </Flex>
 
         );
     }

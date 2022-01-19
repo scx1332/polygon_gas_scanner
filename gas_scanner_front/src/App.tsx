@@ -21,6 +21,7 @@ import {BlockListProvider} from "./provider/BlockListProvider";
 import {GasChartAverage} from "./components/GasChartAverage";
 // @ts-ignore
 import {GasChartAverageTimeFrame} from "./components/GasChartTimeFrame";
+import { Flex } from "@chakra-ui/react";
 
 ChartJS.register(
     CategoryScale,
@@ -84,27 +85,14 @@ export class App extends React.Component {
           <div className="title">
             <div>PolygonGas</div>
           </div>
-          <div className="page-content">
-              <div className="current-gas-chart">
-              <GasChart></GasChart>
-            </div>
-              <div className="current-gas-chart">
-                  <GasChart></GasChart>
-              </div>
-            <div className="average-gas-chart">
-              <GasChartAverage></GasChartAverage>
-            </div>
-              <div className="average-gas-chart">
-              <GasChartAverageTimeFrame></GasChartAverageTimeFrame>
-            </div>
+           <Flex direction="column" shrink="0">
+              <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between">
+                  <GasChart ></GasChart>
+                  <GasChart ></GasChart>
+              </Flex>
 
-
-            <div className="block-list-component">
-              <BlockListComponent></BlockListComponent>
-            </div>
-          </div>
+           </Flex>
         </div>
-
     );
   }
 }
