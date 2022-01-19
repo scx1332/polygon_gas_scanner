@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import {App} from './App';
 import {ChakraProvider} from "@chakra-ui/react"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 //very important:
 
@@ -21,8 +22,13 @@ function useWindowSize() {
 }
 */
 ReactDOM.render(
-  <ChakraProvider>
-    <App />
+   <ChakraProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App page="main" />} />
+        <Route path="/about" element={<App page="about" />} />
+      </Routes>
+    </BrowserRouter>
   </ChakraProvider>,
   document.getElementById('root')
 );

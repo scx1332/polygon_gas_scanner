@@ -21,7 +21,9 @@ import {BlockListProvider} from "./provider/BlockListProvider";
 import {GasChartAverage} from "./components/GasChartAverage";
 // @ts-ignore
 import {GasChartAverageTimeFrame} from "./components/GasChartTimeFrame";
-import {Flex, Heading, Link, Spacer} from "@chakra-ui/react";
+import {Button, Flex, Heading, Link as ChakraLink, Spacer} from "@chakra-ui/react";
+import {Link, useNavigate} from "react-router-dom";
+
 
 ChartJS.register(
     CategoryScale,
@@ -59,16 +61,28 @@ const defaultData =
     {"blockNo":23568284,"minGas":30,"gasUsed":8485065,"gasLimit":15520823,"transCount":51,"blockTime":"2022-01-10T20:09:26.000Z","blockVer":2,"_id":"61dd8b75ea4d960fb7fb4d2c"}
   ];
 
-export class App extends React.Component {
+class AppProps {
+    page: string = "";
+}
+
+class AppState {
+    seconds: number = 0;
+    blockListProvider = new BlockListProvider();
+    page: string = "";
+}
+
+export class App extends React.Component<AppProps> {
   // @ts-ignore
-    constructor(props) {
-    super(props);
+    constructor(props : AppProps) {
+        super(props);
     this.state = {
-      seconds: parseInt(props.startTimeInSeconds, 10) || 0,
-      blockListProvider: new BlockListProvider()
+      seconds: 0,
+      blockListProvider: new BlockListProvider(),
+      page: props.page
     };
   }
 
+  state: AppState;
 
   componentDidMount() {
    // this.interval = setInterval(async () => await this.tick(), 2000);
@@ -78,10 +92,32 @@ export class App extends React.Component {
     //clearInterval(this.interval);
   }
 
+    goToMain() {
+        this.setState({
+            seconds: this.state.seconds,
+            blockListProvider: this.state.blockListProvider,
+            page: "main"
+        })
+    }
+
+  goToAbout() {
+      this.setState({
+          seconds: this.state.seconds,
+          blockListProvider: this.state.blockListProvider,
+          page: "about"
+      })
+  }
+
   render() {
     return (
         <Flex direction="column" padding="0px 20px" height="100%">
-
+            <nav
+                style={{
+                    borderBottom: "solid 1px",
+                    paddingBottom: "1rem"
+                }}
+            >
+            </nav>
           <Flex height="80px;">
               <Flex align="center">
                   <Heading>PolygonGas</Heading>
@@ -90,19 +126,32 @@ export class App extends React.Component {
 
                 <a href="http://localhost:7888/polygon/gas-info/waiting_times?block_start=23500795&block_count=1000000">API</a>
               </Flex>
+              <Flex align="center" padding="0 20px" gridGap="3">
+                  <Button onClick={this.goToMain.bind(this)}>Main</Button>
+                  <Button onClick={this.goToAbout.bind(this)}>About</Button>
+              </Flex>
+
               <Flex align="center" direction="column" padding="20px">
                   <Flex>Sponsored by: </Flex>
-                  <Flex><Link href="https://golem.network">golem.network</Link></Flex>
+                  <Flex><ChakraLink href="https://golem.network">golem.network</ChakraLink></Flex>
               </Flex>
 
           </Flex>
-           <Flex direction="column" shrink="0">
-              <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between"  gridGap="5">
-                  <GasChart ></GasChart>
-                  <GasChart ></GasChart>
+            {this.state.page == "main" &&
+              <Flex direction="column" shrink="0">
+                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between"
+                      gridGap="5">
+                  <GasChart></GasChart>
+                  <GasChart></GasChart>
+                </Flex>
               </Flex>
+            }
+            {this.state.page == "about" &&
+              <Flex direction="column" shrink="0">
+                About
+              </Flex>
+            }
 
-           </Flex>
         </Flex>
     );
   }

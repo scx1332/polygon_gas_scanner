@@ -37,7 +37,7 @@ export class TimeFrameProvider {
     timeFrameData3600 = new Array<TimeFrameDataEntry>();
 
     constructor() {
-        this.interval = setInterval(async () => await this.tick(), 2000);
+        this.interval = setInterval(async () => await this.tick(), 10000);
     }
     attach(observer : any) {
         this.observers.push(observer);
