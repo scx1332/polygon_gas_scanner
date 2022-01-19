@@ -13,7 +13,22 @@ import {
 import { Bar } from 'react-chartjs-2';
 // @ts-ignore
 import blockListProvider, {BlockDataEntry, BlockListProviderResult} from "../provider/BlockListProvider";
-import {Flex, Spacer, Button, ButtonGroup, Heading, Radio, RadioGroup, Accordion, AccordionButton, AccordionPanel, Box, AccordionIcon, AccordionItem} from "@chakra-ui/react";
+import {
+    Flex,
+    Spacer,
+    Button,
+    ButtonGroup,
+    Heading,
+    Radio,
+    RadioGroup,
+    Accordion,
+    AccordionButton,
+    AccordionPanel,
+    Box,
+    AccordionIcon,
+    AccordionItem,
+    Text
+} from "@chakra-ui/react";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -78,6 +93,18 @@ export class GasChart extends React.Component {
         this.updateBlockListPrivate(this.lastResult);
     }
 
+    private getActiveColor() {
+        return "#FEA443";
+    }
+    private getPassiveColor() {
+        return "#705E78";
+    }
+
+    //#F3FEB0
+    //#FEA443
+    //#705E78
+    //#A5AAA3
+    //#812F33
     private updateBlockListPrivate(blockListProviderResult: BlockListProviderResult) {
         let labels = [];
         let minGasArray = [];
@@ -98,42 +125,21 @@ export class GasChart extends React.Component {
 
 
             if (blockEntry.gasUsed / blockEntry.gasLimit < 0.51) {
-                backgroundColors.push("green");
+                backgroundColors.push("#705E78");
             } else {
-                backgroundColors.push("red");
+                backgroundColors.push("#FEA443");
             }
         }
         let datasets = [
             {
-                label: "Min gas",
                 data: minGasArray,
                 backgroundColor: backgroundColors
             }
+
         ];
 
         this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart));
         //console.log("Update block data: " + blockData);
-    }
-
-    private async fetchPrices() {
-        //const res = await fetch("http://145.239.69.80:8899/polygon/gas-info/hist10");
-        const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
-        const data = await res.json();
-        console.log(data);
-        return {
-            labels: data.blockNums,
-            datasets: [{
-                label: "Min gas",
-                data: data.minGas,
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            },
-            {
-                label: "Usage",
-                data: data.blockFill,
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            },
-            ]
-        };
     }
 
     public componentDidMount() {
@@ -184,6 +190,21 @@ export class GasChart extends React.Component {
         }
     }
 
+    getLegend() {
+        return (
+            <Flex flexDirection="column" gridGap="0">
+                <Flex flexDirection="row" gridGap="2">
+                    <Flex alignSelf="center" backgroundColor={this.getActiveColor()} width="20px" height="10px"></Flex>
+                    <Text fontSize="12px" alignSelf="center">Gas usage over 50%</Text>
+                </Flex>
+                <Flex flexDirection="row" gridGap="2">
+                    <Flex alignSelf="center" backgroundColor={this.getPassiveColor()} width="20px" height="10px"></Flex>
+                    <Text fontSize="12px" alignSelf="center">Gas usage under 50%</Text>
+                </Flex>
+            </Flex>
+        );
+    }
+
     render() {
         return (
             <Flex flex={1} flexDirection="column" gridGap="3" backgroundColor={"white"} padding={"15px"}>
@@ -192,10 +213,12 @@ export class GasChart extends React.Component {
                         <Heading as='h3' size='md'> {this.getTitle()}</Heading>
                     </Flex>
                     <Spacer />
+                    {this.getLegend()}
+
                     <Accordion allowToggle={true}>
                         <AccordionItem>
                             <AccordionButton>
-                                Chart type
+                                Fee type
                                 <AccordionIcon />
                             </AccordionButton>
                             <AccordionPanel pb={4}>
@@ -228,9 +251,19 @@ export class GasChart extends React.Component {
                     </Accordion>
                 </Flex>
                 <Flex>
-                    <Bar options={{animation: {
+                    <Bar options={{
+
+                        animation: {
                             duration: 0
-                        }}} data={this.state.chartData}/>
+
+                        },
+
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }} data={this.state.chartData}/>
                 </Flex>
             </Flex>
 
