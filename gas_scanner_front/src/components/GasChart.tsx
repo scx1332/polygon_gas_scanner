@@ -125,9 +125,9 @@ export class GasChart extends React.Component {
 
 
             if (blockEntry.gasUsed / blockEntry.gasLimit < 0.51) {
-                backgroundColors.push("#705E78");
+                backgroundColors.push(this.getPassiveColor());
             } else {
-                backgroundColors.push("#FEA443");
+                backgroundColors.push(this.getActiveColor());
             }
         }
         let datasets = [
@@ -150,15 +150,6 @@ export class GasChart extends React.Component {
         blockListProvider.detach(this);
     }
 
-    private formatTime(secs : number) {
-        let hours   = Math.floor(secs / 3600);
-        let minutes = Math.floor(secs / 60) % 60;
-        let seconds = secs % 60;
-        return [hours, minutes, seconds]
-            .map(v => ('' + v).padStart(2, '0'))
-            .filter((v,i) => v !== '00' || i > 0)
-            .join(':');
-    }
     private displayModeChanged(displayMode:string) {
         this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart), () => {
             if (this.lastResult)
@@ -210,7 +201,7 @@ export class GasChart extends React.Component {
             <Flex flex={1} flexDirection="column" gridGap="3" backgroundColor={"white"} padding={"15px"}>
                 <Flex flexDirection="row"  gridGap="3">
                     <Flex flexDirection="row">
-                        <Heading as='h3' size='md'> {this.getTitle()}</Heading>
+                        <Heading textColor={this.getPassiveColor()} as='h3' size='md'> {this.getTitle()}</Heading>
                     </Flex>
                     <Spacer />
                     {this.getLegend()}
