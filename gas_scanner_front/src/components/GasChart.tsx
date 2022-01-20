@@ -91,7 +91,7 @@ export class GasChart extends React.Component {
 
     constructor(props : any) {
         super(props);
-        this.state = new GasChartState(0, defaultData, "total_fee", 50, "minute_1");
+        this.state = new GasChartState(0, defaultData, "total_fee", 50, "block_1");
     }
     isChartLive() {
         return this.state.chartMode == "block_1";

@@ -23,6 +23,7 @@ import {GasChartAverage} from "./components/GasChartAverage";
 import {GasChartAverageTimeFrame} from "./components/GasChartTimeFrame";
 import {Button, Flex, Heading, Link as ChakraLink, Spacer} from "@chakra-ui/react";
 import {Link, useNavigate} from "react-router-dom";
+import {SuggestedGasComponent} from "./components/GasPrices";
 
 
 ChartJS.register(
@@ -111,14 +112,7 @@ export class App extends React.Component<AppProps> {
   render() {
     return (
         <Flex direction="column" padding="0px 20px" height="100%">
-            <nav
-                style={{
-                    borderBottom: "solid 1px",
-                    paddingBottom: "1rem"
-                }}
-            >
-            </nav>
-          <Flex height="80px;">
+          <Flex height="100px;" padding="10px">
               <Flex align="center">
                   <Heading>PolygonGas</Heading>
               </Flex>
@@ -143,6 +137,10 @@ export class App extends React.Component<AppProps> {
                       gridGap="5">
                   <GasChart></GasChart>
                   <GasChart></GasChart>
+                </Flex>
+                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                  <SuggestedGasComponent></SuggestedGasComponent>
+
                 </Flex>
               </Flex>
             }
