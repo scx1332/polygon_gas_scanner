@@ -34,7 +34,7 @@ class GasInfo {
     updated: string = "";
     cached: string = "";
 }
-let cacheValidityMs: number = 20000;
+let cacheValidityMs: number = parseInt(process.env.SERVER_CACHE_VALIDITY ?? "2000");
 
 let cachedGasInfo: GasInfo | undefined;
 let cachedGasInfoTime: number = 0;

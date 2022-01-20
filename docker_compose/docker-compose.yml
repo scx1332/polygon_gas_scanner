@@ -28,6 +28,7 @@ services:
       WATCHDOG_CHECK_EVERY_MS: 2500      
       
       SERVER_LISTEN_PORT: 7888
+      SERVER_CACHE_VALIDITY: 3000
     ports:
       - "8899:7888"
     tty: true
