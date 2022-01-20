@@ -177,11 +177,16 @@ export class ChainGasScanner {
                     let gas_prices_array = this.transReceiptMap.get(this.blockNumber - 1);
                     let bi = this.blockMap.get(this.blockNumber - 1);
                     if (bi !== undefined && gas_prices_array !== undefined) {
-                        if (gas_prices_array && gas_prices_array.length > 1) {
+                        if (gas_prices_array && gas_prices_array.length > 0) {
                             gas_prices_array.sort((a, b) => bignumberToGwei(a.effectiveGasPrice) - bignumberToGwei(b.effectiveGasPrice));
                             if (bi.minGas != bignumberToGwei(gas_prices_array[0].effectiveGasPrice)) {
                                 console.log("Something went wrong bi.minGas != gas_prices_array[0]");
                             }
+                            let firstTransGas = gas_prices_array[0].gasUsed.toNumber();
+                            if (firstTransGas < 50000 && gas_prices_array.length > 1) {
+                                bi.minGas = bignumberToGwei(gas_prices_array[1].effectiveGasPrice);
+                            }
+                            bi.medianGas = bignumberToGwei(gas_prices_array[Math.floor(gas_prices_array.length / 2)].effectiveGasPrice);
                         }
                         console.log(`Block no ${bi.blockNo}, minimum gas: ${bi.minGas}, gas used: ${bi.gasUsed}, gas limit: ${bi.gasLimit}, transaction count: ${bi.transCount}`);
                         await addBlockEntry(bi);
