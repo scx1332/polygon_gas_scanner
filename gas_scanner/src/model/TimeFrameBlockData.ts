@@ -11,5 +11,8 @@ export class TimeFrameBlockData {
     timeSpanSeconds = 0;
     firstBlock = 0;
     lastBlock = 0;
+    totalFees = 0;
+    burnedFees = 0;
+    totalMinGas = 0;
     version = CURRENT_TIME_FRAME_BLOCK_VERSION;
 }

@@ -20,6 +20,10 @@ function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo
         tfs.blockCount += 1;
         tfs.gasUsed += bi.gasUsed;
         tfs.gasLimit += bi.gasLimit;
+        tfs.burnedFees += bi.burnedFees;
+        tfs.totalFees += bi.totalFees;
+        tfs.totalMinGas += bi.minGas;
+
         if (tfs.firstBlock == 0) {
             tfs.firstBlock = bi.blockNo;
         } else if (bi.blockNo < tfs.firstBlock) {

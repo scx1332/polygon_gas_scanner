@@ -246,8 +246,6 @@ export class ChainGasScanner {
         blockInfo.totalFees += totalFees;
 
 
-
-
         /*for (let log of transactionReceipt.logs) {
             try {
                 console.log(`Log parsed`)
