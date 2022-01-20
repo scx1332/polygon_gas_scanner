@@ -22,7 +22,7 @@ const ERC20interface = new ethers.utils.Interface(IERC20_abi);
 
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
-    gasPricesMap = new Map<number, Array<number>>();
+    transReceiptMap = new Map<number, Array<TransactionReceipt>>();
 
     blockProvider: ethers.providers.JsonRpcBatchProvider;
     transactionsProvider: ethers.providers.JsonRpcBatchProvider;
@@ -106,9 +106,9 @@ export class ChainGasScanner {
             }
 
             while (true) {
-                for (let blockNum of this.gasPricesMap.keys()) {
+                for (let blockNum of this.transReceiptMap.keys()) {
                     if (blockNum < this.blockNumber - 10) {
-                        this.gasPricesMap.delete(blockNum);
+                        this.transReceiptMap.delete(blockNum);
                     }
                 }
                 for (let blockNum of this.blockMap.keys()) {
@@ -174,8 +174,15 @@ export class ChainGasScanner {
                 }
 
                 {
+                    let gas_prices_array = this.transReceiptMap.get(this.blockNumber - 1);
                     let bi = this.blockMap.get(this.blockNumber - 1);
-                    if (bi !== undefined) {
+                    if (bi !== undefined && gas_prices_array !== undefined) {
+                        if (gas_prices_array && gas_prices_array.length > 1) {
+                            gas_prices_array.sort((a, b) => bignumberToGwei(a.effectiveGasPrice) - bignumberToGwei(b.effectiveGasPrice));
+                            if (bi.minGas != bignumberToGwei(gas_prices_array[0].effectiveGasPrice)) {
+                                console.log("Something went wrong bi.minGas != gas_prices_array[0]");
+                            }
+                        }
                         console.log(`Block no ${bi.blockNo}, minimum gas: ${bi.minGas}, gas used: ${bi.gasUsed}, gas limit: ${bi.gasLimit}, transaction count: ${bi.transCount}`);
                         await addBlockEntry(bi);
                     }
@@ -218,16 +225,16 @@ export class ChainGasScanner {
             blockInfo = new BlockInfo();
             this.blockMap.set(blockNumber, blockInfo);
         }
-        let gasPricesArray = this.gasPricesMap.get(blockNumber);
+        let gasPricesArray = this.transReceiptMap.get(blockNumber);
         if (gasPricesArray === undefined) {
-            gasPricesArray = new Array<number>();
-            this.gasPricesMap.set(blockNumber, gasPricesArray);
+            gasPricesArray = new Array<TransactionReceipt>();
+            this.transReceiptMap.set(blockNumber, gasPricesArray);
         }
 
         let effectiveGasPrice = bignumberToGwei(transactionReceipt.effectiveGasPrice);
         //if gas price is lower than 1 gwei then it is special transaction (propably with zero gas)
         if (effectiveGasPrice >= 1.0) {
-            gasPricesArray.push(effectiveGasPrice);
+            gasPricesArray.push(transactionReceipt);
             if (blockInfo.minGas == 0.0) {
                 blockInfo.minGas = effectiveGasPrice;
             }
