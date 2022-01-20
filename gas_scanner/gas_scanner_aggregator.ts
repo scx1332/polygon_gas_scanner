@@ -1,11 +1,11 @@
 import { Logger } from "tslog";
 import {
-    addTimeBlockDataEntry,
-    connectToDatabase,
-    getBlockEntriesNewerThan
+    addTimeBlockDataEntry, clearOldVersionTimeFrameEntries,
+    connectToDatabase, getBlockEntriesGreaterThan,
+    getBlockEntriesNewerThan, getLastTimeframes, getTimeFrameEntry
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
-import { TimeFrameBlockData } from "./src/model/TimeFrameBlockData";
+import {CURRENT_TIME_FRAME_BLOCK_VERSION, TimeFrameBlockData} from "./src/model/TimeFrameBlockData";
 import { BlockInfo } from "./src/model/BlockInfo";
 import { delay } from "./utils";
 
@@ -86,7 +86,6 @@ async function aggregate(blocks: Array<BlockInfo>, timeFrameUnit: string, timeFr
         let date_floor = res.date;
         let date_timespan = res.timeSpanSeconds;
 
-
         if (blockIdx == 0) {
             startTime = date_floor;
             tfs.timeFrameStart = startTime.toISOString();
@@ -116,20 +115,21 @@ async function main() {
 
     await connectToDatabase();
 
+
     let aggregator_delay_seconds = parseInt(process.env.AGGREGATOR_DELAY_SECONDS ?? "60");
     let aggregator_delay_start = parseInt(process.env.AGGREGATOR_DELAY_START ?? "60");
+
+
 
     log.info(`Waiting for: ${aggregator_delay_start} seconds`);
     await delay(aggregator_delay_start * 1000);
     log.info("Wait ended");
 
+    log.info(`Clearing database form old version entries...`);
+    await clearOldVersionTimeFrameEntries(CURRENT_TIME_FRAME_BLOCK_VERSION);
+
     while (true) {
         //2 hours behind
-        let dt = new Date(Date.now() - 4 * 3600 * 1000);
-
-
-        let blocks = await getBlockEntriesNewerThan(dt);
-        log.info(`There are ${blocks.length} returned by the database to analyze`);
 
         let params = [
             {
@@ -138,13 +138,41 @@ async function main() {
             },
             {
                 timeFrameUnit: "minutes",
+                timeFrameUnits: 5
+            },
+            {
+                timeFrameUnit: "minutes",
                 timeFrameUnits: 10
+            },
+            {
+                timeFrameUnit: "minutes",
+                timeFrameUnits: 30
             },
             {
                 timeFrameUnit: "hours",
                 timeFrameUnits: 1
             },
         ];
+        let minDate : Date = new Date();
+        for (let param of params) {
+            let res = getDateFloor(new Date(), param.timeFrameUnit, param.timeFrameUnits);
+            let lastTimeframes = await getLastTimeframes(2, res.timeSpanSeconds);
+            if (lastTimeframes.length < 2) {
+                //analyze all blocks when not found
+                minDate = new Date(2000, 1);
+                break;
+            }
+            for (let tf of lastTimeframes) {
+                let dateCandidate = new Date(tf.timeFrameStart);
+                if (dateCandidate.getTime() < minDate.getTime()) {
+                    minDate = dateCandidate;
+                }
+            }
+        }
+        let blocks = await getBlockEntriesNewerThan(minDate);
+        log.info(`There are ${blocks.length} returned by the database to analyze`);
+
+        await delay(2000);
 
         for (let param of params) {
             await aggregate(blocks, param.timeFrameUnit, param.timeFrameUnits);

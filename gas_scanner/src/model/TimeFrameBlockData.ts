@@ -1,3 +1,5 @@
+export const CURRENT_TIME_FRAME_BLOCK_VERSION = 3;
+
 export class TimeFrameBlockData {
     blockCount = 0;
     minGas = 0;
@@ -9,4 +11,5 @@ export class TimeFrameBlockData {
     timeSpanSeconds = 0;
     firstBlock = 0;
     lastBlock = 0;
+    version = CURRENT_TIME_FRAME_BLOCK_VERSION;
 }

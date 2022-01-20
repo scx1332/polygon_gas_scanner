@@ -81,6 +81,14 @@ export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
     return array;
 }
 
+
+export async function clearOldVersionTimeFrameEntries(version: number) {
+    if (collections.timeFrameBlockDataCollection !== undefined) {
+        const result = await collections.timeFrameBlockDataCollection.deleteMany({version: {$ne: version}});
+    }
+}
+
+
 export async function getLastTimeframes(num: number, timeSpanSeconds: number): Promise<Array<TimeFrameBlockData>> {
     let array = new Array<TimeFrameBlockData>();
     if (collections.timeFrameBlockDataCollection !== undefined) {
@@ -95,7 +103,7 @@ export async function getLastTimeframes(num: number, timeSpanSeconds: number): P
 export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.find({ "blockNo": { $gt: minBlock } }).sort({ blockNo: -1 }).toArray();
+        const result = await collections.blockInfoCollection.find({ blockNo: { $gte: minBlock } }).sort({ blockNo: -1 }).toArray();
         for (let res of result) {
             array.push(Object.assign(new BlockInfo(), res));
         }
@@ -106,7 +114,7 @@ export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Arra
 export async function getBlockEntriesNewerThan(minDate: Date): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.find({ "blockTime": { $gt: minDate.toISOString() } }).sort({ blockNo: -1 }).toArray();
+        const result = await collections.blockInfoCollection.find({ blockTime: { $gte: minDate.toISOString() } }).sort({ blockNo: -1 }).toArray();
         for (let res of result) {
             array.push(Object.assign(new BlockInfo(), res));
         }
