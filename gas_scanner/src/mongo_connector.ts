@@ -46,6 +46,7 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     await collections.timeFrameBlockDataCollection.createIndex(  { "timeFrameStart": 1, "timeSpanSeconds": 1 },{ unique: true });
 
     await collections.erc20Transactions.createIndex(  { "txid": 1 },{ unique: true });
+    await collections.erc20Transactions.createIndex(  { "datetime": 1 },{ unique: false });
     await collections.erc20Transactions.createIndex(  { "from": 1 },{ unique: false });
     await collections.erc20Transactions.createIndex(  { "erc20from": 1 },{ unique: false });
 
@@ -79,6 +80,19 @@ export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
         }
     }
     return array;
+}
+
+export async function clearOldVersionERC20TransactionEntries(version: number) {
+    if (collections.erc20Transactions !== undefined) {
+        const result = await collections.erc20Transactions.deleteMany({version: {$ne: version}});
+    }
+}
+
+
+export async function clearOldVersionMonitoredAddresses(version: number) {
+    if (collections.monitoredAddresses !== undefined) {
+        const result = await collections.monitoredAddresses.deleteMany({version: {$ne: version}});
+    }
 }
 
 
@@ -234,6 +248,18 @@ export async function clearDatabase() {
         await collections.blockInfoCollection.deleteMany({});
     }
 }
+
+export async function getERC20TransactionsNewerThan(minDate: Date) : Promise<Array<TransactionERC20Entry>> {
+    let array = new Array<TransactionERC20Entry>()
+    if (collections.erc20Transactions !== undefined) {
+        let result = await collections.erc20Transactions.find({datetime: {$gte: minDate.toISOString()}}).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new TransactionERC20Entry(), res));
+        }
+    }
+    return array;
+}
+
 
 export async function getERC20Transactions(address:string) : Promise<Array<TransactionERC20Entry>> {
     let array = new Array<TransactionERC20Entry>()

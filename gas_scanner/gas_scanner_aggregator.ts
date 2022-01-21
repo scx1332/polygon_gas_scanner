@@ -1,13 +1,23 @@
 import { Logger } from "tslog";
 import {
-    addTimeBlockDataEntry, clearOldVersionTimeFrameEntries,
-    connectToDatabase, getBlockEntriesGreaterThan,
-    getBlockEntriesNewerThan, getLastTimeframes, getTimeFrameEntry
+    addMonitoredAddress,
+    addTimeBlockDataEntry,
+    clearOldVersionTimeFrameEntries,
+    connectToDatabase,
+    getBlockEntriesGreaterThan,
+    getBlockEntriesNewerThan,
+    getERC20Transactions,
+    getERC20TransactionsNewerThan,
+    getLastTimeframes,
+    getMonitoredAddresses,
+    getTimeFrameEntry
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
 import {CURRENT_TIME_FRAME_BLOCK_VERSION, TimeFrameBlockData} from "./src/model/TimeFrameBlockData";
 import { BlockInfo } from "./src/model/BlockInfo";
-import { delay } from "./utils";
+import {bignumberToGwei, delay} from "./utils";
+import {MonitoredAddress, RecipientInfo} from "./src/model/MonitoredAddresses";
+import {BigNumber} from "ethers";
 
 
 dotenv.config();
@@ -124,7 +134,6 @@ async function main() {
     let aggregator_delay_start = parseInt(process.env.AGGREGATOR_DELAY_START ?? "60");
 
 
-
     log.info(`Waiting for: ${aggregator_delay_start} seconds`);
     await delay(aggregator_delay_start * 1000);
     log.info("Wait ended");
@@ -133,7 +142,6 @@ async function main() {
     await clearOldVersionTimeFrameEntries(CURRENT_TIME_FRAME_BLOCK_VERSION);
 
     while (true) {
-        //2 hours behind
 
         let params = [
             {
@@ -181,6 +189,61 @@ async function main() {
         for (let param of params) {
             await aggregate(blocks, param.timeFrameUnit, param.timeFrameUnits);
         }
+
+
+        try {
+            let day_before = new Date();
+            day_before.setDate(day_before.getDate() - 1);
+            let lastDayTransactions = await getERC20TransactionsNewerThan(day_before);
+            let monitoredAddresses = await getMonitoredAddresses();
+            let mapMonitoredAddresses = new Map<string, MonitoredAddress>();
+            for (let el of monitoredAddresses) {
+                mapMonitoredAddresses.set(el.address, el);
+                el.gasFeesPaidLast24hours = 0;
+                el.glmTransferredLast24hours = 0;
+                el.transactionsLast24hours = 0;
+                el.transactionsLastHour = 0;
+                el.uniqueRecipients = {};
+            }
+            for (let trans of lastDayTransactions) {
+                let monitoredAddress = mapMonitoredAddresses.get(trans.from.toLowerCase());
+                if (!monitoredAddress) {
+                    monitoredAddress = new MonitoredAddress();
+                    monitoredAddress.address = trans.from.toLowerCase();
+                    mapMonitoredAddresses.set(monitoredAddress.address, monitoredAddress);
+                }
+                monitoredAddress.transactionsLast24hours += 1;
+                let gasFee = bignumberToGwei(BigNumber.from(trans.gasPrice)) * parseInt(trans.gasUsed) * 1.0E-9;
+                monitoredAddress.gasFeesPaidLast24hours += gasFee;
+                let glmTransferred = 0.0;
+                if (trans.erc20amount != "") {
+                    let erc20transferred = BigNumber.from(trans.erc20amount);
+                    glmTransferred = bignumberToGwei(erc20transferred) * 1.0E-9;
+                    monitoredAddress.glmTransferredLast24hours += glmTransferred;
+                }
+                if (glmTransferred >= 0.0 && trans.erc20to != "") {
+                    if (trans.erc20to in monitoredAddress.uniqueRecipients) {
+                        monitoredAddress.uniqueRecipients[trans.erc20to].glmTransferred += glmTransferred;
+                        monitoredAddress.uniqueRecipients[trans.erc20to].gasFees += gasFee;
+                        monitoredAddress.uniqueRecipients[trans.erc20to].transactionCount += 1;
+                    } else {
+                        monitoredAddress.uniqueRecipients[trans.erc20to] = new RecipientInfo();
+                        monitoredAddress.uniqueRecipients[trans.erc20to].glmTransferred = glmTransferred;
+                        monitoredAddress.uniqueRecipients[trans.erc20to].gasFees = gasFee;
+                        monitoredAddress.uniqueRecipients[trans.erc20to].transactionCount = 1;
+                    }
+                }
+            }
+            for (let el of monitoredAddresses) {
+                await addMonitoredAddress(el);
+            }
+
+        } catch (ex) {
+            log.error(`Failed to aggreagate transactions ${ex}`)
+        }
+
+
+
         log.info(`Waiting for: ${aggregator_delay_seconds} seconds`);
         await delay(aggregator_delay_seconds * 1000);
         log.info("Wait ended");
