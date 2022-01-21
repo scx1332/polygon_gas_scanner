@@ -3,7 +3,7 @@ import "./BlockList.css";
 import {Bar} from "react-chartjs-2";
 // @ts-ignore
 import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
-
+import {Flex, Text, Table, Thead, Tbody, Tr, Th, Td} from "@chakra-ui/react";
 
 class BlockDataEntry {
   blockNo: number = 0;
@@ -44,7 +44,6 @@ export class BlockListComponent extends React.Component {
     return json_result;
   }
 
-
   async tick() {
     let blockData = await this.fetchLastBlocks();
     console.log(blockData);
@@ -64,39 +63,38 @@ export class BlockListComponent extends React.Component {
 
   render() {
     return (
-      <div>
-        <div>
+      <Flex direction="column" backgroundColor="white" padding="10px">
+        <Flex>
           <h2>Latest blocks</h2>
-        </div>
-        <div>
+        </Flex>
+        <Flex>
           {this.state.error !== "" &&
-              <div>{this.state.error}</div>
+              <Text>{this.state.error}</Text>
           }
           {this.state.error === "" &&
-              <table>
-                <thead>
-                <tr>
-                  <th>Block <br/>number</th>
-                  <th>Minimum gas<br/> in block</th>
-                  <th>% of gas<br/> used</th>
-                  <th>Block<br/> date</th>
-                </tr>
+              <Table>
+                <Thead>
+                <Tr>
+                  <Th>Block <br/>number</Th>
+                  <Th>Minimum gas<br/> in block</Th>
+                  <Th>% of gas<br/> used</Th>
+                  <Th>Block<br/> date</Th>
+                </Tr>
 
-                </thead>
-                <tbody>
+                </Thead>
+                <Tbody>
                 {this.state.blockData.map(blockData => (
-                    <tr key={blockData.blockNo}>
-                      <td><a href={"https://polygonscan.com/block/" + blockData.blockNo}>{blockData.blockNo}</a></td>
-                      <td>{blockData.minGas.toFixed(2)}</td>
-                      <td>{(blockData.gasUsed / blockData.gasLimit).toFixed(3)}</td>
-                      <td>{blockData.blockTime}</td>
-                    </tr>))}
-                </tbody>
-              </table>
+                    <Tr key={blockData.blockNo}>
+                      <Td><a href={"https://polygonscan.com/block/" + blockData.blockNo}>{blockData.blockNo}</a></Td>
+                      <Td>{blockData.minGas.toFixed(2)}</Td>
+                      <Td>{(blockData.gasUsed / blockData.gasLimit).toFixed(3)}</Td>
+                      <Td>{blockData.blockTime}</Td>
+                    </Tr>))}
+                </Tbody>
+              </Table>
           }
-        </div>
-      </div>
-
+        </Flex>
+      </Flex>
     );
   }
 }

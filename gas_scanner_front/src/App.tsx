@@ -142,6 +142,10 @@ export class App extends React.Component<AppProps> {
                   <SuggestedGasComponent></SuggestedGasComponent>
 
                 </Flex>
+                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                  <BlockListComponent></BlockListComponent>
+
+                </Flex>
               </Flex>
             }
             {this.state.page == "about" &&
