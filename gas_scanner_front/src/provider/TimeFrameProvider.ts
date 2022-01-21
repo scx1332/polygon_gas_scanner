@@ -17,6 +17,7 @@ export class TimeFrameProviderResult {
     }
 }
 
+const pollingInterval = parseInt(process.env.REACT_APP_CHECK_AVG_DATA_INTERVAL ?? "30000");
 
 const defaultData =
     [
@@ -37,7 +38,7 @@ export class TimeFrameProvider {
     timeFrameData3600 = new Array<TimeFrameDataEntry>();
 
     constructor() {
-        this.interval = setInterval(async () => await this.tick(), 10000);
+        this.interval = setTimeout(async () => await this.tick(), 300);
     }
     attach(observer : any) {
         this.observers.push(observer);
@@ -82,6 +83,8 @@ export class TimeFrameProvider {
             }
         } catch (ex) {
             this.notify(new TimeFrameProviderResult(this.timeFrameData60, this.timeFrameData3600, `Error when downloading data from datasource: ${ex}`));
+        } finally {
+            this.interval = setTimeout(async () => await this.tick(), pollingInterval);
         }
     }
 

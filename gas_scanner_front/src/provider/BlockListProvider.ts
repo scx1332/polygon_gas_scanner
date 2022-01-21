@@ -12,7 +12,7 @@ export class BlockListProviderResult {
     error: string = "";
 }
 
-
+const pollingInterval = parseInt(process.env.REACT_APP_CHECK_BLOCK_LIST_INTERVAL ?? "30000");
 const defaultData =
     [
         {"blockNo":23568293,"minGas":30,"gasUsed":13394423,"gasLimit":15384954,"transCount":60,"blockTime":"2022-01-10T20:09:44.000Z","blockVer":2,"_id":"61dd8b79ea4d960fb7fb4d35"},
@@ -36,7 +36,7 @@ export class BlockListProvider {
     blockData = new Array<BlockDataEntry>();
 
     constructor() {
-        this.interval = setInterval(async () => await this.tick(), 2000);
+        this.interval = setTimeout(async () => await this.tick(), 100);
     }
     attach(observer : any) {
         this.observers.push(observer);
@@ -59,11 +59,12 @@ export class BlockListProvider {
     }
 
     async tick() {
-        if (this.observers.length == 0) {
-            console.log("BlockListProvider: inactive due to lack of observers");
-            return;
-        }
         try {
+            if (this.observers.length == 0) {
+                console.log("BlockListProvider: inactive due to lack of observers");
+                return;
+            }
+
             let blockData = await this.fetchLastBlocks();
             console.log("BlockListProvider: Downloaded blockdata: " + blockData);
             if (Array.isArray(blockData) && blockData.length > 0) {
@@ -119,6 +120,8 @@ export class BlockListProvider {
             providerResult.blockData = [];
             providerResult.error = "Error when fetching data: " + ex;
             this.notify(providerResult);
+        } finally {
+            this.interval = setTimeout(async () => await this.tick(), pollingInterval);
         }
 
     }

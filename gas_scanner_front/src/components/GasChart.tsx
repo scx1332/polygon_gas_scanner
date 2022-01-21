@@ -162,7 +162,7 @@ export class GasChart extends React.Component {
 
         ];
 
-        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart, this.state.chartMode));
+        this.setState({chartData: {labels: labels, datasets: datasets}});
         //console.log("Update block data: " + blockData);
     }
     updateTimeFrameData(timeFrameDataResult : TimeFrameProviderResult) {
@@ -184,11 +184,11 @@ export class GasChart extends React.Component {
 
         let aggregateCount = 0;
         let minimumGas = 0;
-        for (let blockDataIdx = Math.max(0, timeFrameData.length - 24); blockDataIdx < timeFrameData.length; blockDataIdx += 1) {
+        for (let blockDataIdx = Math.max(0, timeFrameData.length - this.state.numberOnChart); blockDataIdx < timeFrameData.length; blockDataIdx += 1) {
             let blockEntry = timeFrameData[blockDataIdx];
 
             let dt = new Date(blockEntry.timeFrameStart);
-            if (dt.getHours() == 0) {
+            if (dt.getHours() == 0 && dt.getMinutes() == 0) {
                 labels.push(moment(dt).format("MMM-DD HH:mm"));
             } else {
                 labels.push(moment(dt).format("HH:mm"));
@@ -207,7 +207,7 @@ export class GasChart extends React.Component {
         ];
         console.log("Setting state");
 
-        this.setState(new GasChartState(0, {labels: labels, datasets: datasets}, this.state.displayMode, this.state.numberOnChart, this.state.chartMode))
+        this.setState({chartData: {labels: labels, datasets: datasets}});
     }
 
     public componentDidMount() {
@@ -221,21 +221,19 @@ export class GasChart extends React.Component {
     }
 
     private binCapacityChanged(binCapacity:string) {
-        this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, this.state.numberOnChart, binCapacity), () => {
+        this.setState({chartMode: binCapacity}, () => {
             this.updateChartPrivate();
         }); // );
-
-
     }
 
     private displayModeChanged(displayMode:string) {
-        this.setState(new GasChartState(this.state.seconds, this.state.chartData, displayMode, this.state.numberOnChart, this.state.chartMode), () => {
+        this.setState({displayMode: displayMode}, () => {
             this.updateChartPrivate();
             }); // needs to do -1 if the button is clicked already
         }
     private displayCountChanged(number_str:string) {
         let number = parseInt(number_str);
-        this.setState(new GasChartState(this.state.seconds, this.state.chartData, this.state.displayMode, number, this.state.chartMode), () => {
+        this.setState({numberOnChart: number}, () => {
             this.updateChartPrivate();
         }); // needs to do -1 if the button is clicked already
     }

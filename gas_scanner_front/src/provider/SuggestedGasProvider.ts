@@ -24,6 +24,8 @@ export class SuggestedGasResult {
     }
 }
 
+const pollingInterval = parseInt(process.env.REACT_APP_CHECK_GAS_PRICE_INTERVAL ?? "30000");
+
 let defaultData = {"minGasPrice":"68.36","maxMinGasPrice":"74.51","optimalGasPrice":"68.43","minGasPrice100":"68.36","maxMinGasPrice100":"88.48","minGasPrice1000":"68.36","maxMinGasPrice1000":"88.48","health":"Info outdated 208169 seconds","updated":"2022-01-18T04:28:03.000Z","cached":"2022-01-20T14:17:31.995Z"};
 
 export class SuggestedGasProvider {
@@ -33,7 +35,7 @@ export class SuggestedGasProvider {
     suggestedGasData : SuggestedGasEntry | undefined;
 
     constructor() {
-        this.interval = setInterval(async () => await this.tick(), 2000);
+        this.interval = setTimeout(async () => await this.tick(), 100);
     }
     attach(observer : any) {
         this.observers.push(observer);
@@ -59,7 +61,10 @@ export class SuggestedGasProvider {
             this.notify(new SuggestedGasResult(this.suggestedGasData, undefined));
         } catch (ex) {
             this.notify(new SuggestedGasResult(undefined, `Error when downloading data from datasource: ${ex}`));
+        } finally {
+            this.interval = setTimeout(async () => await this.tick(), pollingInterval);
         }
+
     }
 
     notify(suggestedGasResult : SuggestedGasResult) {
