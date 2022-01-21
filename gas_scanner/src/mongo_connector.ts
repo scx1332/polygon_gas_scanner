@@ -235,6 +235,18 @@ export async function clearDatabase() {
     }
 }
 
+export async function getERC20Transactions(address:string) : Promise<Array<TransactionERC20Entry>> {
+    let array = new Array<TransactionERC20Entry>()
+    if (collections.erc20Transactions !== undefined) {
+        let result = await collections.erc20Transactions.find({from:address}).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new TransactionERC20Entry(), res));
+        }
+    }
+    return array;
+}
+
+
 
 export async function addERC20TransactionEntry(entry: TransactionERC20Entry) {
     if (collections.erc20Transactions !== undefined) {

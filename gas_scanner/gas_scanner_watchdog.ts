@@ -1,4 +1,4 @@
-import { connectToDatabase, getTimeFrameEntry } from "./src/mongo_connector";
+import {connectToDatabase, getLastBlocks, getTimeFrameEntry} from "./src/mongo_connector";
 import { ChildProcess, spawn } from "child_process";
 
 import { Logger } from "tslog";
@@ -115,12 +115,15 @@ class Watchdog {
                 this.startServerProcess();
                 this.startGasScannerAggregator();
             }
-            let tfe = await getTimeFrameEntry("last_10_block");
-            log.debug("Received object " + JSON.stringify(tfe));
 
             await delay(this.check_every_ms);
+            let lastBlock = await getLastBlocks(1);
+            log.debug("Received object " + JSON.stringify(lastBlock));
+            if (lastBlock.length != 1) {
+                continue;
+            }
 
-            let dt = Date.parse(tfe.lastBlockTime);
+            let dt = Date.parse(lastBlock[0].blockTime);
             let dtNow = Date.now();
 
             let differenceInSeconds = (dtNow - dt) / 1000.0;

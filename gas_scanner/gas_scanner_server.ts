@@ -1,9 +1,9 @@
 import express from 'express';
 import {
     connectToDatabase,
-    getBlockEntriesGreaterThan, getBlockEntriesInRange,
+    getBlockEntriesGreaterThan, getBlockEntriesInRange, getERC20Transactions,
     getHistEntry,
-    getLastBlockEntry, getLastBlocks, getLastTimeframes,
+    getLastBlockEntry, getLastBlocks, getLastTimeframes, getMonitoredAddresses,
     getTimeFrameEntry
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
@@ -214,6 +214,35 @@ app.get('/polygon/gas-info/hist10', async (req, res) => {
         res.sendStatus(404);
     }
 })
+
+app.get('/polygon/monitored-addresses/all', async (req, res) => {
+    try {
+        let me = await getMonitoredAddresses();
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(me));
+
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
+
+app.get('/polygon/transactions/all', async (req, res) => {
+    try {
+        //@ts-ignore
+        let block_address = req.query.address.toString();
+        if (block_address) {
+            let transactions = await getERC20Transactions(block_address);
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(transactions));
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify("not-found"));
+        }
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
+
 
 connectToDatabase().then(() => {
     app.listen(PORT, () => {
