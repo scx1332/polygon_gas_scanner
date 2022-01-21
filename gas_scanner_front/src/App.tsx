@@ -24,6 +24,7 @@ import {GasChartAverageTimeFrame} from "./components/GasChartTimeFrame";
 import {Button, Flex, Heading, Link as ChakraLink, Spacer} from "@chakra-ui/react";
 import {Link, useNavigate} from "react-router-dom";
 import {SuggestedGasComponent} from "./components/GasPrices";
+import {AddressListComponent} from "./components/AddressList";
 
 
 ChartJS.register(
@@ -142,6 +143,11 @@ export class App extends React.Component<AppProps> {
                   <SuggestedGasComponent></SuggestedGasComponent>
 
                 </Flex>
+                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                  <AddressListComponent></AddressListComponent>
+
+                </Flex>
+
                 <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
                   <BlockListComponent></BlockListComponent>
 

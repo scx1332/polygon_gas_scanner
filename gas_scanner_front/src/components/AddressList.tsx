@@ -4,26 +4,22 @@ import {Bar} from "react-chartjs-2";
 import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
 import {Flex, Text, Table, Thead, Tbody, Tr, Th, Td} from "@chakra-ui/react";
 
-class BlockDataEntry {
-  blockNo: number = 0;
-  minGas: number = 0;
-  gasUsed: number = 0;
-  gasLimit: number = 0;
-  blockTime: string = "";
+class AddressEntry {
+  address: string = "";
 }
 
-class BlockListComponentState {
-  blockData = new Array<BlockDataEntry>();
+class AddressListComponentState {
+  addressData = new Array<AddressEntry>();
   error = "";
 }
 
-export class BlockListComponent extends React.Component {
-  state: BlockListComponentState;
+export class AddressListComponent extends React.Component {
+  state: AddressListComponentState;
 
   constructor(props:any) {
     super(props);
     this.state = {
-      blockData: new Array<BlockDataEntry>(),
+      addressData: new Array<AddressEntry>(),
       error: ""
     };
   }
@@ -33,16 +29,20 @@ export class BlockListComponent extends React.Component {
     this.setState({ blockData: blockListProviderResult.blockData, error: blockListProviderResult.error });
     console.log("Update block data: " + blockListProviderResult.blockData);
   }
-/*
-  async fetchLastBlocks() {
-    const res = await fetch("http://localhost:7888/polygon/block-info/last-blocks?block_count=10");
+
+  async fetchAddressList() {
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+    const res = await fetch(`${BACKEND_URL}/polygon/monitored-addresses/all`);
+
     //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
     let json_result = await res.json();
 
-    console.log(json_result);
-    return json_result;
-  }
 
+
+    console.log(json_result);
+    this.setState({addressData: json_result});
+  }
+/*
   async tick() {
     let blockData = await this.fetchLastBlocks();
     console.log(blockData);
@@ -53,11 +53,13 @@ export class BlockListComponent extends React.Component {
   }
 */
   componentDidMount() {
-    blockListProvider.attach(this);
+    setTimeout(async() => await this.fetchAddressList(), 1000);
+
+    //blockListProvider.attach(this);
   }
 
   componentWillUnmount() {
-    blockListProvider.detach(this);
+    //blockListProvider.detach(this);
   }
 
   render() {
@@ -74,20 +76,14 @@ export class BlockListComponent extends React.Component {
               <Table>
                 <Thead>
                 <Tr>
-                  <Th>Block <br/>number</Th>
-                  <Th>Minimum gas<br/> in block</Th>
-                  <Th>% of gas<br/> used</Th>
-                  <Th>Block<br/> date</Th>
+                  <Th>Address list</Th>
                 </Tr>
 
                 </Thead>
                 <Tbody>
-                {this.state.blockData.map(blockData => (
-                    <Tr key={blockData.blockNo}>
-                      <Td><a href={"https://polygonscan.com/block/" + blockData.blockNo}>{blockData.blockNo}</a></Td>
-                      <Td>{blockData.minGas.toFixed(2)}</Td>
-                      <Td>{(blockData.gasUsed / blockData.gasLimit).toFixed(3)}</Td>
-                      <Td>{blockData.blockTime}</Td>
+                {this.state.addressData.map(addressData => (
+                    <Tr>
+                      <Td><a href={"https://polygonscan.com/address/" + addressData.address}>{addressData.address}</a></Td>
                     </Tr>))}
                 </Tbody>
               </Table>
