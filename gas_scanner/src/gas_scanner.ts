@@ -268,9 +268,10 @@ export class ChainGasScanner {
         }*/
 
         try {
-            if (transactionReceipt.to != undefined || transactionReceipt.from != undefined)
+            if (transactionReceipt.to != undefined && transactionReceipt.from != undefined)
             {
                 if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
+                    let transactionInfo = await this.transactionsProvider.getTransaction(transactionReceipt.transactionHash);
                     for (let log of transactionReceipt.logs) {
 
                         let parsed = ERC20interface.parseLog(log);
@@ -293,10 +294,11 @@ export class ChainGasScanner {
                             let newEntry = new TransactionERC20Entry();
                             newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
                             newEntry.datetime = blockInfo.blockTime;
-                            newEntry.nonce = transactionReceipt.transactionIndex;
+                            newEntry.nonce = transactionInfo.nonce;
                             newEntry.blockNo = transactionReceipt.blockNumber;
                             newEntry.gasUsed = transactionReceipt.gasUsed.toString();
                             newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
+                            newEntry.gasLimit = transactionInfo.gasLimit.toString();
                             newEntry.erc20amount = amount.toString();
                             newEntry.to = transactionReceipt.to.toString().toLowerCase();
                             newEntry.from = transactionReceipt.from.toString().toLowerCase();

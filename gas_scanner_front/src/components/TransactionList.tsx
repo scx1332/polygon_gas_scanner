@@ -4,22 +4,33 @@ import {Bar} from "react-chartjs-2";
 import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
 import {Flex, Text, Table, Thead, Tbody, Tr, Th, Td} from "@chakra-ui/react";
 
-class AddressEntry {
-  address: string = "";
+class TransactionEntry {
+  txid: string = "";
+  blockNo: number = 0;
+  gasPrice: string = "";
+  gaUsed: string = "";
+  from: string = ""
+  to: string = ""
+  nonce: number = 0;
+  datetime: string = "";
+  erc20from: string = "";
+  erc20to: string = "";
+  erc20amount: string = "";
+  version: string = "";
 }
 
-class AddressListComponentState {
-  addressData = new Array<AddressEntry>();
+class TransactionListComponentState {
+  transactionData = new Array<TransactionEntry>();
   error = "";
 }
 
-export class AddressListComponent extends React.Component {
-  state: AddressListComponentState;
+export class TransactionListComponent extends React.Component {
+  state: TransactionListComponentState;
 
   constructor(props:any) {
     super(props);
     this.state = {
-      addressData: new Array<AddressEntry>(),
+      transactionData: new Array<TransactionEntry>(),
       error: ""
     };
   }
@@ -30,15 +41,15 @@ export class AddressListComponent extends React.Component {
     console.log("Update block data: " + blockListProviderResult.blockData);
   }
 
-  async fetchAddressList() {
+  async fetchTransactionList() {
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-    const res = await fetch(`${BACKEND_URL}/polygon/monitored-addresses/all`);
+    const res = await fetch(`${BACKEND_URL}/polygon/transactions/all?address=0x172378b2cec20857407461d11180affe1979daca`);
 
     //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
     let json_result = await res.json();
-
+    
     console.log(json_result);
-    this.setState({addressData: json_result});
+    this.setState({transactionData: json_result});
   }
 /*
   async tick() {
@@ -51,7 +62,7 @@ export class AddressListComponent extends React.Component {
   }
 */
   componentDidMount() {
-    setTimeout(async() => await this.fetchAddressList(), 1000);
+    setTimeout(async() => await this.fetchTransactionList(), 1000);
 
     //blockListProvider.attach(this);
   }
@@ -79,9 +90,14 @@ export class AddressListComponent extends React.Component {
 
                 </Thead>
                 <Tbody>
-                {this.state.addressData.map(addressData => (
+                {this.state.transactionData.map(transactionData => (
                     <Tr>
-                      <Td><a href={"https://polygonscan.com/address/" + addressData.address}>{addressData.address}</a></Td>
+                      <Td><a href={"https://polygonscan.com/tx/" + transactionData.txid}>{transactionData.txid}</a></Td>
+                      <Td>{transactionData.datetime}</Td>
+                      <Td>{transactionData.erc20amount}</Td>
+                      <Td>{transactionData.gasPrice}</Td>
+                      <Td>{transactionData.erc20to}</Td>
+                      <Td>{transactionData.nonce}</Td>
                     </Tr>))}
                 </Tbody>
               </Table>

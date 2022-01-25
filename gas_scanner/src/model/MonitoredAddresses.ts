@@ -1,4 +1,4 @@
-export const CURRENT_MONITORED_ADDRESS_VERSION = 5;
+export const CURRENT_MONITORED_ADDRESS_VERSION = 6;
 
 export class RecipientInfo {
     transactionCount: number = 0;

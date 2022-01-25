@@ -25,6 +25,7 @@ import {Button, Flex, Heading, Link as ChakraLink, Spacer} from "@chakra-ui/reac
 import {Link, useNavigate} from "react-router-dom";
 import {SuggestedGasComponent} from "./components/GasPrices";
 import {AddressListComponent} from "./components/AddressList";
+import {TransactionListComponent} from "./components/TransactionList";
 
 
 ChartJS.register(
@@ -147,6 +148,10 @@ export class App extends React.Component<AppProps> {
                   <AddressListComponent></AddressListComponent>
 
                 </Flex>
+                  <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                      <TransactionListComponent></TransactionListComponent>
+
+                  </Flex>
 
                 <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
                   <BlockListComponent></BlockListComponent>

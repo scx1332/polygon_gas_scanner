@@ -1,10 +1,11 @@
-export const CURRENT_ERC20_TRANSACTION_VERSION = 5;
+export const CURRENT_ERC20_TRANSACTION_VERSION = 6;
 
 export class TransactionERC20Entry {
     txid = "";
     blockNo = 0;
     gasPrice = "";
     gasUsed = "";
+    gasLimit = "";
     from = "";
     to = "";
     nonce = 0;
