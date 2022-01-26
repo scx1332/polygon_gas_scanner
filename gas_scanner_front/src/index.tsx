@@ -4,6 +4,7 @@ import './index.css';
 import {App} from './App';
 import {ChakraProvider} from "@chakra-ui/react"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {Provider} from "react-redux";
 
 //very important:
 

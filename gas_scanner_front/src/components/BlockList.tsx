@@ -11,15 +11,15 @@ class BlockDataEntry {
   gasLimit: number = 0;
   blockTime: string = "";
 }
+interface IProps {
 
+}
 class BlockListComponentState {
   blockData = new Array<BlockDataEntry>();
   error = "";
 }
 
-export class BlockListComponent extends React.Component {
-  state: BlockListComponentState;
-
+export class BlockListComponent extends React.Component<IProps, BlockListComponentState> {
   constructor(props:any) {
     super(props);
     this.state = {

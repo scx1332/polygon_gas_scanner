@@ -3,6 +3,7 @@ import {Bar} from "react-chartjs-2";
 // @ts-ignore
 import blockListProvider, {BlockListProviderResult} from "../provider/BlockListProvider";
 import {Flex, Text, Table, Thead, Tbody, Tr, Th, Td} from "@chakra-ui/react";
+import selectedAddressStore, {SelectedAddressStoreState} from "../store/SelectedAddressStore";
 
 class TransactionEntry {
   txid: string = "";
@@ -19,56 +20,54 @@ class TransactionEntry {
   version: string = "";
 }
 
+class IProps {
+
+}
 class TransactionListComponentState {
   transactionData = new Array<TransactionEntry>();
+  selectedAddress? : string;
   error = "";
 }
 
-export class TransactionListComponent extends React.Component {
-  state: TransactionListComponentState;
-
+export class TransactionListComponent extends React.Component<IProps, TransactionListComponentState> {
   constructor(props:any) {
     super(props);
     this.state = {
       transactionData: new Array<TransactionEntry>(),
+      selectedAddress: undefined,
       error: ""
     };
   }
 
-  //listener
-  updateBlockList(blockListProviderResult: BlockListProviderResult) {
-    this.setState({ blockData: blockListProviderResult.blockData, error: blockListProviderResult.error });
-    console.log("Update block data: " + blockListProviderResult.blockData);
-  }
-
   async fetchTransactionList() {
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-    const res = await fetch(`${BACKEND_URL}/polygon/transactions/all?address=0x172378b2cec20857407461d11180affe1979daca`);
+    if (this.state.selectedAddress) {
+      const res = await fetch(`${BACKEND_URL}/polygon/transactions/all?address=${this.state.selectedAddress}`);
 
-    //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
-    let json_result = await res.json();
-    
-    console.log(json_result);
-    this.setState({transactionData: json_result});
+      //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
+      let json_result = await res.json();
+
+      console.log(json_result);
+      this.setState({transactionData: json_result});
+    }
   }
-/*
-  async tick() {
-    let blockData = await this.fetchLastBlocks();
-    console.log(blockData);
-    this.setState(state => ({
-      seconds: state.seconds + 2,
-      blockData: blockData
-    }));
+
+
+  selectedAddressChanged(newState : SelectedAddressStoreState) {
+    this.setState({selectedAddress: newState.selectedAddress}, async () => await this.fetchTransactionList());
   }
-*/
+
   componentDidMount() {
     setTimeout(async() => await this.fetchTransactionList(), 1000);
+
+    selectedAddressStore.attach(this);
 
     //blockListProvider.attach(this);
   }
 
   componentWillUnmount() {
     //blockListProvider.detach(this);
+    selectedAddressStore.detach(this);
   }
 
   render() {
