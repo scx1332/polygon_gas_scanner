@@ -275,8 +275,12 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
             let gasPaid = BigNumber.from(0);
 
             for (let transaction of transactions) {
-                erc20amount = erc20amount.add(BigNumber.from(transaction.erc20amount));
-                gasPaid.add(BigNumber.from(transaction.gasUsed).mul(BigNumber.from(transaction.gasPrice)));
+                if (transaction.erc20amount) {
+                    erc20amount = erc20amount.add(BigNumber.from(transaction.erc20amount));
+                }
+                if (transaction.gasUsed && transaction.gasPrice) {
+                    gasPaid = gasPaid.add(BigNumber.from(transaction.gasUsed).mul(BigNumber.from(transaction.gasPrice)));
+                }
             }
             res.setHeader('Content-Type', 'application/json');
             let resp = {
