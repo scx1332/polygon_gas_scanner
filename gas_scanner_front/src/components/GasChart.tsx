@@ -65,7 +65,9 @@ const defaultData = {
 };
 
 
+class IProps {
 
+}
 class GasChartState {
     seconds: number = 0;
     chartData: any;
@@ -83,9 +85,7 @@ class GasChartState {
 }
 
 
-export class GasChart extends React.Component {
-    state : GasChartState;
-
+export class GasChart extends React.Component<IProps, GasChartState> {
     lastResult : BlockListProviderResult | undefined;
     lastTimeFrameResult: TimeFrameProviderResult | undefined;
 
