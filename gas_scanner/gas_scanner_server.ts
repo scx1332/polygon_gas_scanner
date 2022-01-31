@@ -1,12 +1,14 @@
-import express from 'express';
+import express, {Request} from 'express';
 import {
     connectToDatabase,
-    getBlockEntriesGreaterThan, getBlockEntriesInRange, getERC20Transactions,
+    getBlockEntriesGreaterThan, getBlockEntriesInRange, getERC20Transactions, getERC20TransactionsFilter,
     getHistEntry,
     getLastBlockEntry, getLastBlocks, getLastTimeframes, getMonitoredAddresses,
     getTimeFrameEntry
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
+import {BigNumber} from "ethers";
+import {bignumberToGwei} from "./utils";
 let cors = require("cors");
 
 
@@ -220,6 +222,75 @@ app.get('/polygon/monitored-addresses/all', async (req, res) => {
         let me = await getMonitoredAddresses();
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(me));
+
+    } catch (ex) {
+        res.sendStatus(404);
+    }
+})
+
+interface ITransactionFilter {
+    address?: string;
+    min_block?: string;
+    max_block?: string;
+    min_date?: string;
+    max_date?: string;
+
+    aggregate?: string;
+}
+
+app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransactionFilter>, res) => {
+    try {
+        let filters: any = {};
+
+        if (req.query.address) {
+            filters.from = {};
+            filters.from.$eq = req.query.address;
+        }
+        if (req.query.min_block) {
+            filters.blockNo = {};
+            filters.blockNo.$gte = parseInt(req.query.min_block);
+        }
+        if (req.query.max_block) {
+            if (filters.blockNo === undefined) {
+                filters.blockNo = {};
+            }
+            filters.blockNo.$lte = parseInt(req.query.max_block);
+        }
+        if (req.query.min_date) {
+            filters.datetime = {};
+            filters.datetime.$gte = req.query.min_date;
+        }
+        if (req.query.max_date) {
+            if (filters.datetime === undefined) {
+                filters.datetime = {};
+            }
+            filters.datetime.$lte = req.query.max_date;
+        }
+
+        let transactions = await getERC20TransactionsFilter(filters);
+
+        if (req.query.aggregate == "1") {
+
+            let erc20amount = BigNumber.from(0);
+            let gasPaid = BigNumber.from(0);
+
+            for (let transaction of transactions) {
+                erc20amount = erc20amount.add(BigNumber.from(transaction.erc20amount));
+                gasPaid.add(BigNumber.from(transaction.gasUsed).mul(BigNumber.from(transaction.gasPrice)));
+            }
+            res.setHeader('Content-Type', 'application/json');
+            let resp = {
+                erc20amount: (bignumberToGwei(erc20amount) * 1.0E-9).toFixed(6),
+                erc20amountExact : erc20amount.toString(),
+                gasPaidExact: gasPaid.toString(),
+                gasPaid: (bignumberToGwei(gasPaid) * 1.0E-9).toFixed(6)
+            };
+            res.end(JSON.stringify(resp));
+
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(transactions));
+        }
 
     } catch (ex) {
         res.sendStatus(404);

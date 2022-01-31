@@ -261,6 +261,17 @@ export async function getERC20TransactionsNewerThan(minDate: Date) : Promise<Arr
 }
 
 
+export async function getERC20TransactionsFilter(mongo_filter:any) : Promise<Array<TransactionERC20Entry>> {
+    let array = new Array<TransactionERC20Entry>()
+    if (collections.erc20Transactions !== undefined) {
+        let result = await collections.erc20Transactions.find(mongo_filter).sort({ nonce: 1 }).toArray();
+        for (let res of result) {
+            array.push(Object.assign(new TransactionERC20Entry(), res));
+        }
+    }
+    return array;
+}
+
 export async function getERC20Transactions(address:string) : Promise<Array<TransactionERC20Entry>> {
     let array = new Array<TransactionERC20Entry>()
     if (collections.erc20Transactions !== undefined) {

@@ -43,7 +43,7 @@ export class TransactionListComponent extends React.Component {
 
   async fetchTransactionList() {
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-    const res = await fetch(`${BACKEND_URL}/polygon/transactions/all?address=0x172378b2cec20857407461d11180affe1979daca`);
+    const res = await fetch(`${BACKEND_URL}/polygon/transactions/all?address=0x0307ce721798df86cfc544fd5d73028dcbaa29ca`);
 
     //const res = await fetch("http://127.0.0.1:7888/polygon/gas-info/hist10");
     let json_result = await res.json();
@@ -94,8 +94,8 @@ export class TransactionListComponent extends React.Component {
                     <Tr>
                       <Td><a href={"https://polygonscan.com/tx/" + transactionData.txid}>{transactionData.txid}</a></Td>
                       <Td>{transactionData.datetime}</Td>
-                      <Td>{transactionData.erc20amount}</Td>
-                      <Td>{transactionData.gasPrice}</Td>
+                      <Td>{(parseFloat(transactionData.erc20amount) / 1.0E18).toFixed(3)}</Td>
+                      <Td>{(parseFloat(transactionData.gasPrice) / 1.0E9).toFixed(2)} Gwei</Td>
                       <Td>{transactionData.erc20to}</Td>
                       <Td>{transactionData.nonce}</Td>
                     </Tr>))}
