@@ -274,9 +274,16 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
             let erc20amount = BigNumber.from(0);
             let gasPaid = BigNumber.from(0);
 
+            let erc20transactions = 0;
+            let otherTransactions = 0;
             for (let transaction of transactions) {
+
                 if (transaction.erc20amount) {
                     erc20amount = erc20amount.add(BigNumber.from(transaction.erc20amount));
+                    erc20transactions += 1;
+                }
+                else {
+                    otherTransactions += 1;
                 }
                 if (transaction.gasUsed && transaction.gasPrice) {
                     gasPaid = gasPaid.add(BigNumber.from(transaction.gasUsed).mul(BigNumber.from(transaction.gasPrice)));
@@ -287,7 +294,9 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
                 erc20amount: (bignumberToGwei(erc20amount) * 1.0E-9).toFixed(6),
                 erc20amountExact : erc20amount.toString(),
                 gasPaidExact: gasPaid.toString(),
-                gasPaid: (bignumberToGwei(gasPaid) * 1.0E-9).toFixed(6)
+                gasPaid: (bignumberToGwei(gasPaid) * 1.0E-9).toFixed(6),
+                erc20transactions: erc20transactions,
+                otherTransactions: otherTransactions
             };
             res.end(JSON.stringify(resp));
 
