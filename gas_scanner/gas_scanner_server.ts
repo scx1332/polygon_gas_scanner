@@ -238,6 +238,38 @@ interface ITransactionFilter {
     aggregate?: string;
 }
 
+class SenderSummaryInternal {
+    sumErc20Exact: BigNumber = BigNumber.from(0);
+    gasPaidExact: BigNumber = BigNumber.from(0);
+    transactionCount: number = 0;
+    gasUsed: number = 0;
+}
+
+class RecipientSummaryInternal {
+    sumErc20Exact: BigNumber = BigNumber.from(0);
+    gasPaidExact: BigNumber = BigNumber.from(0);
+    transactionCount: number = 0;
+    gasUsed: number = 0;
+}
+
+class SenderSummaryExternal {
+    sumErc20Exact: string = "0";
+    sumErc20: number = 0;
+    gasUsed: number = 0;
+    gasPaidExact: string = "0";
+    gasPaid: number = 0;
+    transactionCount: number = 0;
+}
+class RecipientSummaryExternal {
+    sumErc20Exact: string = "0";
+    sumErc20: number = 0;
+    gasUsed: number = 0;
+    gasPaidExact: string = "0";
+    gasPaid: number = 0;
+    transactionCount: number = 0;
+}
+
+
 app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransactionFilter>, res) => {
     try {
         let filters: any = {};
@@ -269,8 +301,14 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
 
         let transactions = await getERC20TransactionsFilter(filters);
 
-        if (req.query.aggregate == "1") {
+        let recipients = new Map<string, RecipientSummaryInternal>();
+        let senders = new Map<string, SenderSummaryInternal>();
 
+        let recipientsExternal : {[address: string] : RecipientSummaryExternal} = {};
+        let sendersExternal : {[address: string] : RecipientSummaryExternal} = {};
+
+
+        if (req.query.aggregate == "1") {
             let erc20amount = BigNumber.from(0);
             let gasPaid = BigNumber.from(0);
 
@@ -278,25 +316,94 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
             let otherTransactions = 0;
             for (let transaction of transactions) {
 
+                let recipient: RecipientSummaryInternal | undefined;
+                if (transaction.erc20to) {
+                    recipient = recipients.get(transaction.erc20to);
+                    if (recipient === undefined) {
+                        recipient = new RecipientSummaryInternal();
+                        recipients.set(transaction.erc20to, recipient);
+                    }
+                }
+                let sender: SenderSummaryInternal | undefined;
+                if (transaction.erc20from) {
+                    sender = senders.get(transaction.erc20from);
+                    if (sender === undefined) {
+                        sender = new SenderSummaryInternal();
+                        senders.set(transaction.erc20from, sender);
+                    }
+                }
+
+
                 if (transaction.erc20amount) {
-                    erc20amount = erc20amount.add(BigNumber.from(transaction.erc20amount));
+                    let amountBig = BigNumber.from(transaction.erc20amount);
+                    erc20amount = erc20amount.add(amountBig);
+
+                    if (recipient) {
+                        recipient.sumErc20Exact = recipient.sumErc20Exact.add(amountBig);
+                        recipient.transactionCount += 1;
+                    }
+                    if (sender) {
+                        sender.sumErc20Exact = sender.sumErc20Exact.add(amountBig);
+                        sender.transactionCount += 1;
+                    }
+
                     erc20transactions += 1;
                 }
                 else {
                     otherTransactions += 1;
                 }
                 if (transaction.gasUsed && transaction.gasPrice) {
-                    gasPaid = gasPaid.add(BigNumber.from(transaction.gasUsed).mul(BigNumber.from(transaction.gasPrice)));
+                    let gasPaidBig = BigNumber.from(transaction.gasUsed).mul(BigNumber.from(transaction.gasPrice));
+
+                    if (recipient) {
+                        recipient.gasPaidExact = recipient.gasPaidExact.add(gasPaidBig);
+                        recipient.gasUsed += parseInt(transaction.gasUsed);
+                    }
+                    if (sender) {
+                        sender.gasPaidExact = sender.gasPaidExact.add(gasPaidBig);
+                        sender.gasUsed += parseInt(transaction.gasUsed);
+                    }
+
+                    gasPaid = gasPaid.add(gasPaidBig);
                 }
             }
+
+            for (let it of senders) {
+                let address = it[0];
+                let sendInt = it[1];
+                let sendExt = new SenderSummaryExternal();
+                sendExt.sumErc20Exact = sendInt.sumErc20Exact.toString();
+                sendExt.sumErc20 = bignumberToGwei(sendInt.sumErc20Exact) * 1.0E-9;
+                sendExt.gasPaidExact = sendInt.gasPaidExact.toString();
+                sendExt.gasPaid = bignumberToGwei(sendInt.gasPaidExact) * 1.0E-9;
+                sendExt.gasUsed = sendInt.gasUsed;
+                sendExt.transactionCount = sendInt.transactionCount;
+                sendersExternal[address] = sendExt;
+            }
+
+            for (let it of recipients) {
+                let address = it[0];
+                let recInt = it[1];
+                let recExt = new RecipientSummaryExternal();
+                recExt.sumErc20Exact = recInt.sumErc20Exact.toString();
+                recExt.sumErc20 = bignumberToGwei(recInt.sumErc20Exact) * 1.0E-9;
+                recExt.gasPaidExact = recInt.gasPaidExact.toString();
+                recExt.gasPaid = bignumberToGwei(recInt.gasPaidExact) * 1.0E-9;
+                recExt.gasUsed = recInt.gasUsed;
+                recExt.transactionCount = recInt.transactionCount;
+                recipientsExternal[address] = recExt;
+            }
             res.setHeader('Content-Type', 'application/json');
+
             let resp = {
                 erc20amount: (bignumberToGwei(erc20amount) * 1.0E-9).toFixed(6),
                 erc20amountExact : erc20amount.toString(),
                 gasPaidExact: gasPaid.toString(),
                 gasPaid: (bignumberToGwei(gasPaid) * 1.0E-9).toFixed(6),
                 erc20transactions: erc20transactions,
-                otherTransactions: otherTransactions
+                otherTransactions: otherTransactions,
+                senders: sendersExternal,
+                recipients: recipientsExternal
             };
             res.end(JSON.stringify(resp));
 
