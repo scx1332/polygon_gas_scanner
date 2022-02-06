@@ -273,39 +273,43 @@ export class ChainGasScanner {
                 if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
                     let transactionInfo = await this.transactionsProvider.getTransaction(transactionReceipt.transactionHash);
                     for (let log of transactionReceipt.logs) {
+                        try {
+                            let parsed = ERC20interface.parseLog(log);
+                            //console.log(JSON.stringify(parsed));
+                            if (parsed.name == "Transfer") {
+                                //console.log("Block number: " + blockNumber);
+                                //console.log("Tx transaction: " + transactionReceipt.transactionHash);
 
-                        let parsed = ERC20interface.parseLog(log);
-                        console.log(JSON.stringify(parsed));
-                        if (parsed.name == "Transfer") {
-                            //console.log("Block number: " + blockNumber);
-                            //console.log("Tx transaction: " + transactionReceipt.transactionHash);
+                                let tokenFrom = parsed.args[0];
+                                let tokenTo = parsed.args[1];
+                                let amount = parsed.args[2];
 
-                            let tokenFrom = parsed.args[0];
-                            let tokenTo = parsed.args[1];
-                            let amount = parsed.args[2];
+                                if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
+                                    let ma = new MonitoredAddress();
+                                    ma.address = transactionReceipt.from.toString().toLowerCase();
+                                    this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
+                                    await addMonitoredAddress(ma);
+                                }
 
-                            if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
-                                let ma = new MonitoredAddress();
-                                ma.address = transactionReceipt.from.toString().toLowerCase();
-                                this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
-                                await addMonitoredAddress(ma);
+                                let newEntry = new TransactionERC20Entry();
+                                newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
+                                newEntry.datetime = blockInfo.blockTime;
+                                newEntry.nonce = transactionInfo.nonce;
+                                newEntry.blockNo = transactionReceipt.blockNumber;
+                                newEntry.gasUsed = transactionReceipt.gasUsed.toString();
+                                newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
+                                newEntry.gasLimit = transactionInfo.gasLimit.toString();
+                                newEntry.erc20amount = amount.toString();
+                                newEntry.to = transactionReceipt.to.toString().toLowerCase();
+                                newEntry.from = transactionReceipt.from.toString().toLowerCase();
+                                newEntry.erc20from = tokenFrom.toString().toLowerCase();
+                                newEntry.erc20to = tokenTo.toString().toLowerCase();
+                                await addERC20TransactionEntry(newEntry);
+                                console.log(`Glm transfer from ${tokenFrom} to ${tokenTo}. Amount ${amount}`);
                             }
-
-                            let newEntry = new TransactionERC20Entry();
-                            newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
-                            newEntry.datetime = blockInfo.blockTime;
-                            newEntry.nonce = transactionInfo.nonce;
-                            newEntry.blockNo = transactionReceipt.blockNumber;
-                            newEntry.gasUsed = transactionReceipt.gasUsed.toString();
-                            newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
-                            newEntry.gasLimit = transactionInfo.gasLimit.toString();
-                            newEntry.erc20amount = amount.toString();
-                            newEntry.to = transactionReceipt.to.toString().toLowerCase();
-                            newEntry.from = transactionReceipt.from.toString().toLowerCase();
-                            newEntry.erc20from = tokenFrom.toString().toLowerCase();
-                            newEntry.erc20to = tokenTo.toString().toLowerCase();
-                            await addERC20TransactionEntry(newEntry);
-                            console.log(`Glm transfer from ${tokenFrom} to ${tokenTo}. Amount ${amount}`);
+                        }
+                        catch (ex) {
+                            console.log(ex);
                         }
                     }
                 } else {
