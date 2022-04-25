@@ -1,9 +1,10 @@
-import Navbar from './navbar'
-import Footer from './footer'
+import Navbar from './Navbar'
+import Footer from './Footer'
 import {Box, Button, Flex, Heading, Link} from "@chakra-ui/react";
-import SmallWithLogoLeft from "./footer";
-import Nav from './navbar2'
+import SmallWithLogoLeft from "./Footer";
+import Nav from './Navbar2'
 
+// @ts-ignore
 export default function Layout({ children }) {
     return (
         <Flex direction="column" padding="0px 20px" height="100%">
@@ -13,7 +14,6 @@ export default function Layout({ children }) {
             </main>
 
             <SmallWithLogoLeft></SmallWithLogoLeft>
-
         </Flex>
     )
 }

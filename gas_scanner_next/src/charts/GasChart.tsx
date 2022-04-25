@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 // @ts-ignore
-import blockListProvider, {BlockDataEntry, BlockListProviderResult} from "../provider/BlockListProvider";
+import blockListProvider, {BlockDataEntry, BlockListProviderResult} from "../providers/BlockListProvider";
 import {
     Flex,
     Spacer,
@@ -29,7 +29,7 @@ import {
     AccordionItem,
     Text
 } from "@chakra-ui/react";
-import timeFrameProvider, {TimeFrameProviderResult} from "../provider/TimeFrameProvider";
+import timeFrameProvider, {TimeFrameProviderResult} from "../providers/TimeFrameProvider";
 import moment from "moment";
 ChartJS.register(
     CategoryScale,

@@ -44,7 +44,8 @@ export default function Nav() {
                         <Link href={'/'}>Home</Link>
                         <Link href={'/live'}>Live</Link>
                         <Link href={'/about'}>About</Link>
-                        <Link href={'/contact'}>Contact</Link>
+                        <Link href={'/history'}>History</Link>
+                        <Link href={'/plotlychart'}>Test</Link>
                     </Stack>
                     <Flex alignItems={'center'}>
                         <Stack direction={'row'} spacing={7}>
