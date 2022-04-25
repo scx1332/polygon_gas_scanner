@@ -4,6 +4,7 @@ import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import Layout from './common/Layout'
 import {Flex} from "@chakra-ui/react";
+import {GasChart} from "../charts/GasChart";
 
 
 const Live: NextPage = () => {
@@ -11,6 +12,7 @@ const Live: NextPage = () => {
         <Layout>
             <Flex direction="column">
                 Live view
+                <GasChart></GasChart>
             </Flex>
         </Layout>
     )

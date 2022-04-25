@@ -1,5 +1,4 @@
 import React from 'react';
-import "./GasChart.css";
 import { useEffect, useState } from "react"
 import {
     Chart as ChartJS,
