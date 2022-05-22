@@ -24,12 +24,8 @@ function useWindowSize() {
 */
 ReactDOM.render(
    <ChakraProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App page="main" />} />
-        <Route path="/about" element={<App page="about" />} />
-      </Routes>
-    </BrowserRouter>
+
+       <App></App>
   </ChakraProvider>,
   document.getElementById('root')
 );

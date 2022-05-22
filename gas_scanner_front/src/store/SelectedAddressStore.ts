@@ -1,4 +1,4 @@
-import {BlockListProviderResult} from "../provider/BlockListProvider";
+import {BlockListProviderResult} from "../providers/BlockListProvider";
 
 export class SelectedAddressStoreState {
     selectedAddress?: string;
