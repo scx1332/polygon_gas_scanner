@@ -1,10 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import {App} from './App';
 import {ChakraProvider} from "@chakra-ui/react"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import {Provider} from "react-redux";
+import About from "./pages/about";
+//@ts-ignore
+import Plotlychart from "./pages/plotlychart";
+
 
 //very important:
 
@@ -24,8 +27,12 @@ function useWindowSize() {
 */
 ReactDOM.render(
    <ChakraProvider>
-
-       <App></App>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<About/>} />
+        <Route path="/plotlychart" element={<Plotlychart />} />
+      </Routes>
+    </BrowserRouter>
   </ChakraProvider>,
   document.getElementById('root')
 );
