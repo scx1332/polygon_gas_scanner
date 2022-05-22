@@ -9,8 +9,8 @@ async function fetchData() {
 const sleep = m => new Promise(r => setTimeout(r, m));
 
 export function ClientSideObject() {
-    const [data, setData] = useState(null)
-    const [isLoading, setLoading] = useState(false)
+    //const [data, setData] = useState(null)
+    //const [isLoading, setLoading] = useState(false)
     const [counter, setCounter] = useState(0)
 
     useEffect( () => {
