@@ -47,7 +47,7 @@ export const options = {
         },
         title: {
             display: true,
-            text: 'GasChart.js Bar Chart',
+            text: 'GasChart22.js Bar Chart',
         },
     },
 };
@@ -84,7 +84,7 @@ class GasChartState {
 }
 
 
-export class GasChart extends React.Component<IProps, GasChartState> {
+export class GasChart22 extends React.Component<IProps, GasChartState> {
     lastResult : BlockListProviderResult | undefined;
     lastTimeFrameResult: TimeFrameProviderResult | undefined;
 
