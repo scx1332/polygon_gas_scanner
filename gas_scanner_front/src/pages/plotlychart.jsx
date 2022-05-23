@@ -37,9 +37,11 @@ const Plotlychart = () => {
 
     useEffect(() => {
         async function fetchMyAPI() {
-            let lastBLocks = 20000;
+            let lastBLocks = 10000;
             const BACKEND_URL = "http://145.239.69.80:8899";
-            const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-blocks?block_count=${lastBLocks}`);
+            //const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-blocks?block_count=${lastBLocks}`);
+            let timespan_seconds = 60;
+            const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-time-frames?block_count=${lastBLocks}&&timespan_seconds=${timespan_seconds}`);
             let json_result = await res.json();
             //console.log(json_result);
 
@@ -47,9 +49,10 @@ const Plotlychart = () => {
             let yarray = [];
             for (var i = 0; i < json_result.length; i++){
                 let obj = json_result[i];
-                xarray.push(obj["blockTime"]);
+                //xarray.push(obj["blockTime"]);
+                xarray.push(obj["timeFrameStart"]);
                 //yarray.push(obj["baseFeePrice"]);
-                yarray.push(obj["minGas"]);
+                yarray.push(obj["minGas"] - 0.0);
             }
             const plot_data2 = [
                 {
@@ -78,7 +81,7 @@ const Plotlychart = () => {
                 <Plot
 
                     data={plotData}
-                    layout={ {width: 720, height: 640, title: 'A Fancy Plot'} }
+                    layout={ {height: 600, title: 'Minimum gas prices in minute interval'} }
                 />
 
             </Flex>
