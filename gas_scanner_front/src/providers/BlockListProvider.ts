@@ -51,7 +51,7 @@ export class BlockListProvider {
           lastBLocks = 200;
 
         }
-        const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+        const BACKEND_URL = "http://145.239.69.80:8899";
         const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-blocks?block_count=${lastBLocks}`);
         let json_result = await res.json();
         return json_result;
@@ -61,7 +61,7 @@ export class BlockListProvider {
     async tick() {
         try {
             if (this.observers.length == 0) {
-                console.log("BlockListProvider: inactive due to lack of observers");
+                //console.log("BlockListProvider: inactive due to lack of observers");
                 return;
             }
 

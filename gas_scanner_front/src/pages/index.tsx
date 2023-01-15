@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import Layout from './common/Layout'
 import {Flex} from "@chakra-ui/react";
-import GasChart from "../charts/GasChart";
+//import GasChart from "../charts/GasChart";
 
 
 const Home: NextPage = () => {
@@ -9,7 +9,6 @@ const Home: NextPage = () => {
       <Layout>
           <Flex direction="column">
               Live view
-              <GasChart></GasChart>
           </Flex>
       </Layout>
   )

@@ -1,22 +1,23 @@
 import { ChainGasScanner } from "./src/gas_scanner";
 import { delay } from "./utils";
-import * as dotenv from 'dotenv';
-import { parse } from 'ts-command-line-args';
+import * as dotenv from "dotenv";
+import { parse } from "ts-command-line-args";
 import {
-    clearDatabase, clearOldVersionERC20TransactionEntries,
+    clearDatabase,
+    clearOldVersionERC20TransactionEntries,
     clearOldVersionMonitoredAddresses,
     connectToDatabase,
-    getLastBlockEntry
+    getLastBlockEntry,
 } from "./src/mongo_connector";
-import {CURRENT_MONITORED_ADDRESS_VERSION} from "./src/model/MonitoredAddresses";
-import {CURRENT_ERC20_TRANSACTION_VERSION} from "./src/model/TransactionEntry";
+import { CURRENT_MONITORED_ADDRESS_VERSION } from "./src/model/MonitoredAddresses";
+import { CURRENT_ERC20_TRANSACTION_VERSION } from "./src/model/TransactionEntry";
 
 //load config from .env
 
 interface IGasScannerArguments {
     clearDatabase: boolean;
     fillMissingBlocks: boolean;
-    forceStartingBlockNumber?: Number;
+    forceStartingBlockNumber?: number;
     help?: boolean;
 }
 export const args = parse<IGasScannerArguments>(
@@ -24,12 +25,12 @@ export const args = parse<IGasScannerArguments>(
         clearDatabase: Boolean,
         fillMissingBlocks: Boolean,
         forceStartingBlockNumber: { type: Number, optional: true },
-        help: { type: Boolean, optional: true, alias: 'h', description: 'Prints this usage guide' },
+        help: { type: Boolean, optional: true, alias: "h", description: "Prints this usage guide" },
     },
     {
-        helpArg: 'help',
-        headerContentSections: [{ header: 'My Example Config', content: 'Thanks for using Our Awesome Library' }],
-        footerContentSections: [{ header: 'Footer', content: `Copyright: Big Faceless Corp. inc.` }],
+        helpArg: "help",
+        headerContentSections: [{ header: "My Example Config", content: "Thanks for using Our Awesome Library" }],
+        footerContentSections: [{ header: "Footer", content: `Copyright: Big Faceless Corp. inc.` }],
     },
 );
 
@@ -60,12 +61,11 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
         }
     }
 
-
-    let p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
+    const p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
 
     await p.runWorkers();
 
-    while (true) {
+    for (;;) {
         await delay(100000);
     }
 })();

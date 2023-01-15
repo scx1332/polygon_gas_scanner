@@ -1,4 +1,3 @@
-
 export const CURRENT_BLOCK_INFO_VERSION = 2;
 
 //keep names short to improve performance on MongoDB

@@ -4,18 +4,13 @@ import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import Layout from './common/Layout'
 import {Flex} from "@chakra-ui/react";
-import {GasChart22} from "../charts/GasChart22";
-
-
-const Live: NextPage = () => {
+const History: NextPage = () => {
     return (
         <Layout>
             <Flex direction="column">
-                Live view
-                <GasChart22></GasChart22>
             </Flex>
         </Layout>
     )
 }
 
-export default Live
+export default History

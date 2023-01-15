@@ -49,7 +49,7 @@ export class TimeFrameProvider {
 
     async fetchLastTimeFrames(timespan_seconds: number) {
         let lastBLocks = 100;
-        const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+        const BACKEND_URL = "http://145.239.69.80:8899";
         const res = await fetch(`${BACKEND_URL}/polygon/block-info/last-time-frames?block_count=${lastBLocks}&timespan_seconds=${timespan_seconds}`);
         let json_result = await res.json();
         return json_result;
@@ -59,6 +59,11 @@ export class TimeFrameProvider {
 
     async tick() {
         try {
+            if (this.observers.length == 0) {
+                //console.log("BlockListProvider: inactive due to lack of observers");
+                return;
+            }
+
             let timeFrameData60 = await this.fetchLastTimeFrames(60);
             let timeFrameData3600 = await this.fetchLastTimeFrames(3600);
             console.log("TimeFrameProvider: " + timeFrameData60);

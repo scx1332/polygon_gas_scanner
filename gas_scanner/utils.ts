@@ -5,9 +5,8 @@
  */
 import { BigNumber } from "ethers";
 
-
 export function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function bignumberToGwei(bn: BigNumber) {

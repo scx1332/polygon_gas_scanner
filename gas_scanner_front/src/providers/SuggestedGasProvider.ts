@@ -56,6 +56,11 @@ export class SuggestedGasProvider {
 
     async tick() {
         try {
+            if (this.observers.length == 0) {
+                //console.log("BlockListProvider: inactive due to lack of observers");
+                return;
+            }
+
             let suggestedGasData = await this.fetchSuggestedGas();
             this.suggestedGasData = suggestedGasData;
             this.notify(new SuggestedGasResult(this.suggestedGasData, undefined));

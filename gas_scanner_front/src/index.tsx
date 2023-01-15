@@ -1,10 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import {App} from './App';
 import {ChakraProvider} from "@chakra-ui/react"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import {Provider} from "react-redux";
+import Home from "./pages";
+import Live from "./pages/live";
+import About from "./pages/about";
+import History from "./pages/history";
+//@ts-ignore
+import Plotlychart from "./pages/plotlychart";
+
 
 //very important:
 
@@ -26,8 +32,11 @@ ReactDOM.render(
    <ChakraProvider>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App page="main" />} />
-        <Route path="/about" element={<App page="about" />} />
+        <Route path="/" element={<Home/>} />
+      <Route path="/live" element={<Live/>} />
+      <Route path="/about" element={<About/>} />
+      <Route path="/history" element={<History/>} />
+        <Route path="/plotlychart" element={<Plotlychart />} />
       </Routes>
     </BrowserRouter>
   </ChakraProvider>,
