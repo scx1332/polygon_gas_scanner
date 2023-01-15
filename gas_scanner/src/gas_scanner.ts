@@ -1,12 +1,8 @@
 import { TransactionReceipt } from "@ethersproject/abstract-provider";
 import { bignumberToGwei, delay } from "../utils";
 import * as ethers from "ethers";
-import IERC20_abi from "./contracts/IERC20.abi.json";
 import {
     addBlockEntry,
-    addERC20TransactionEntry,
-    addMonitoredAddress,
-    getMonitoredAddresses,
     updateHistEntry,
     updateTimeFrameEntry,
 } from "./mongo_connector";
@@ -14,10 +10,6 @@ import { BlockInfo } from "./model/BlockInfo";
 import { ChainGasScannerStatus } from "./model/ChainGasScannerStatus";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
-import { TransactionERC20Entry } from "./model/TransactionEntry";
-import { MonitoredAddress } from "./model/MonitoredAddresses";
-
-const ERC20interface = new ethers.utils.Interface(IERC20_abi);
 
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
@@ -37,19 +29,10 @@ export class ChainGasScanner {
     blockNumber = 0;
     blockTime = "";
 
-    monitoredAddresses = new Map<string, MonitoredAddress>();
-
     constructor(providerRpcAddress: string, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.startingBlockNumber = startingBlock;
-    }
-
-    async loadMonitoredAddresses() {
-        const list = await getMonitoredAddresses();
-        for (const addr of list) {
-            this.monitoredAddresses.set(addr.address.toLowerCase(), addr);
-        }
     }
 
     computeBlockHistogram(name: string, blockCount: number): MinGasBlocksHistogram {
@@ -260,94 +243,6 @@ export class ChainGasScanner {
         }
         blockInfo.burnedFees += burnedFees;
         blockInfo.totalFees += totalFees;
-
-        /*for (const log of transactionReceipt.logs) {
-            try {
-                console.log(`Log parsed`)
-            } catch (e) {
-                //ignore
-                //console.log(e);
-            }
-        }*/
-
-        try {
-            if (transactionReceipt.to != undefined && transactionReceipt.from != undefined) {
-                if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
-                    const transactionInfo = await this.transactionsProvider.getTransaction(
-                        transactionReceipt.transactionHash,
-                    );
-                    for (const log of transactionReceipt.logs) {
-                        try {
-                            const parsed = ERC20interface.parseLog(log);
-                            //console.log(JSON.stringify(parsed));
-                            if (parsed.name == "Transfer") {
-                                //console.log("Block number: " + blockNumber);
-                                //console.log("Tx transaction: " + transactionReceipt.transactionHash);
-
-                                const tokenFrom = parsed.args[0];
-                                const tokenTo = parsed.args[1];
-                                const amount = parsed.args[2];
-
-                                if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
-                                    const ma = new MonitoredAddress();
-                                    ma.address = transactionReceipt.from.toString().toLowerCase();
-                                    this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
-                                    await addMonitoredAddress(ma);
-                                }
-
-                                const newEntry = new TransactionERC20Entry();
-                                newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
-                                newEntry.datetime = blockInfo.blockTime;
-                                newEntry.nonce = transactionInfo.nonce;
-                                newEntry.blockNo = transactionReceipt.blockNumber;
-                                newEntry.gasUsed = transactionReceipt.gasUsed.toString();
-                                newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
-                                newEntry.gasLimit = transactionInfo.gasLimit.toString();
-                                newEntry.erc20amount = amount.toString();
-                                newEntry.to = transactionReceipt.to.toString().toLowerCase();
-                                newEntry.from = transactionReceipt.from.toString().toLowerCase();
-                                newEntry.erc20from = tokenFrom.toString().toLowerCase();
-                                newEntry.erc20to = tokenTo.toString().toLowerCase();
-                                await addERC20TransactionEntry(newEntry);
-                                console.log(`Glm transfer from ${tokenFrom} to ${tokenTo}. Amount ${amount}`);
-                            }
-                        } catch (ex) {
-                            console.log(ex);
-                        }
-                    }
-                } else {
-                    if (this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
-                        const newEntry = new TransactionERC20Entry();
-                        newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
-                        newEntry.datetime = blockInfo.blockTime;
-                        newEntry.nonce = transactionReceipt.transactionIndex;
-                        newEntry.blockNo = transactionReceipt.blockNumber;
-                        newEntry.gasUsed = transactionReceipt.gasUsed.toString();
-                        newEntry.gasPrice = transactionReceipt.effectiveGasPrice.toString();
-                        newEntry.erc20amount = "";
-                        newEntry.to = transactionReceipt.to.toString().toLowerCase();
-                        newEntry.from = transactionReceipt.from.toString().toLowerCase();
-                        newEntry.erc20from = "";
-                        newEntry.erc20to = "";
-                        await addERC20TransactionEntry(newEntry);
-                    }
-                }
-            }
-        } catch (e) {
-            //ignore
-            console.log(e);
-        }
-
-        //if (transferCount >= 2 && transferCount <= 3) {
-        //    for (const address in addresses) {
-                //console.log(address);
-        //    }
-        //}
-        //if (transferCount >= 2 && transferCount <= 3) {
-        //    for (const address in addresses) {
-                //console.log(address);
-        //    }
-        //}
     }
 
     async processTransactions() {
@@ -383,7 +278,6 @@ export class ChainGasScanner {
     }
 
     async runWorkers() {
-        await this.loadMonitoredAddresses();
         this.workerProcessTransactions = this.processTransactions();
         this.workerGetBlocks = this.getBlocksWorker();
     }

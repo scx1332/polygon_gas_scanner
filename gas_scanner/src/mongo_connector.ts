@@ -3,16 +3,12 @@ import { BlockInfo } from "./model/BlockInfo";
 import { TimeFrameBlockData } from "./model/TimeFrameBlockData";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
-import { TransactionERC20Entry } from "./model/TransactionEntry";
-import { MonitoredAddress } from "./model/MonitoredAddresses";
 
 export const collections: {
     blockInfoCollection?: mongoDB.Collection;
     timeFrameInfoCollection?: mongoDB.Collection;
     histogramCollection?: mongoDB.Collection;
     timeFrameBlockDataCollection?: mongoDB.Collection;
-    erc20Transactions?: mongoDB.Collection;
-    monitoredAddresses?: mongoDB.Collection;
 } = {};
 
 export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
@@ -32,8 +28,6 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     collections.timeFrameInfoCollection = db.collection("TimeFrameInfo");
     collections.histogramCollection = db.collection("Histograms");
     collections.timeFrameBlockDataCollection = db.collection("TimeFrameBlockData");
-    collections.erc20Transactions = db.collection("ERC20Transaction");
-    collections.monitoredAddresses = db.collection("MonitoredAddress");
 
     await collections.blockInfoCollection.createIndex({ blockNo: 1 }, { unique: true });
     await collections.blockInfoCollection.createIndex({ blockTime: 1 }, { unique: false });
@@ -44,13 +38,6 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
         { timeFrameStart: 1, timeSpanSeconds: 1 },
         { unique: true },
     );
-
-    await collections.erc20Transactions.createIndex({ txid: 1 }, { unique: true });
-    await collections.erc20Transactions.createIndex({ datetime: 1 }, { unique: false });
-    await collections.erc20Transactions.createIndex({ from: 1 }, { unique: false });
-    await collections.erc20Transactions.createIndex({ erc20from: 1 }, { unique: false });
-
-    await collections.monitoredAddresses.createIndex({ address: 1 }, { unique: true });
 
     const indexList = await collections.blockInfoCollection.indexes();
 
@@ -80,18 +67,6 @@ export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
         }
     }
     return array;
-}
-
-export async function clearOldVersionERC20TransactionEntries(version: number) {
-    if (collections.erc20Transactions !== undefined) {
-        await collections.erc20Transactions.deleteMany({ version: { $ne: version } });
-    }
-}
-
-export async function clearOldVersionMonitoredAddresses(version: number) {
-    if (collections.monitoredAddresses !== undefined) {
-        await collections.monitoredAddresses.deleteMany({ version: { $ne: version } });
-    }
 }
 
 export async function clearOldVersionTimeFrameEntries(version: number) {
@@ -152,28 +127,6 @@ export async function getBlockEntriesInRange(minBlock: number, maxBlock: number)
             .toArray();
         for (const res of result) {
             array.push(Object.assign(new BlockInfo(), res));
-        }
-    }
-    return array;
-}
-
-export async function addMonitoredAddress(entry: MonitoredAddress) {
-    if (collections.monitoredAddresses !== undefined) {
-        const el = await collections.monitoredAddresses.findOne({ address: entry.address });
-        if (el == null) {
-            await collections.monitoredAddresses.insertOne(entry);
-        } else {
-            await collections.monitoredAddresses.replaceOne({ _id: el._id }, entry);
-        }
-    }
-}
-
-export async function getMonitoredAddresses() {
-    const array = new Array<MonitoredAddress>();
-    if (collections.monitoredAddresses !== undefined) {
-        const result = await collections.monitoredAddresses.find({}).toArray();
-        for (const res of result) {
-            array.push(Object.assign(new MonitoredAddress(), res));
         }
     }
     return array;
@@ -255,62 +208,5 @@ export async function clearDatabase() {
     }
     if (collections.blockInfoCollection !== undefined) {
         await collections.blockInfoCollection.deleteMany({});
-    }
-}
-
-export async function getERC20TransactionsNewerThan(minDate: Date): Promise<Array<TransactionERC20Entry>> {
-    const array = new Array<TransactionERC20Entry>();
-    if (collections.erc20Transactions !== undefined) {
-        const result = await collections.erc20Transactions.find({ datetime: { $gte: minDate.toISOString() } }).toArray();
-        for (const res of result) {
-            array.push(Object.assign(new TransactionERC20Entry(), res));
-        }
-    }
-    return array;
-}
-
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export async function getERC20TransactionsFilter(mongo_filter: any): Promise<Array<TransactionERC20Entry>> {
-    const array = new Array<TransactionERC20Entry>();
-    if (collections.erc20Transactions !== undefined) {
-        const result = await collections.erc20Transactions.find(mongo_filter).sort({ nonce: 1 }).toArray();
-        for (const res of result) {
-            array.push(Object.assign(new TransactionERC20Entry(), res));
-        }
-    }
-    return array;
-}
-
-export async function getERC20Transactions(address: string): Promise<Array<TransactionERC20Entry>> {
-    const array = new Array<TransactionERC20Entry>();
-    if (collections.erc20Transactions !== undefined) {
-        const result = await collections.erc20Transactions
-            .find({ from: { $eq: address } })
-            .sort({ nonce: 1 })
-            .toArray();
-        for (const res of result) {
-            array.push(Object.assign(new TransactionERC20Entry(), res));
-        }
-    }
-    return array;
-}
-
-export async function addERC20TransactionEntry(entry: TransactionERC20Entry) {
-    if (collections.erc20Transactions !== undefined) {
-        const el = await collections.erc20Transactions.findOne({
-            txid: entry.txid,
-        });
-        if (el == null) {
-            await collections.erc20Transactions.insertOne(entry);
-        } else {
-            //TODO - reduce unnecessery updates by comparing objects
-            /*const entryClone = Object.assign({}, entry);
-            //@ts-ignore
-            entryClone._id = el._id;
-            if (JSON.stringify(entryClone) != JSON.stringify(el)) {
-                //console.log("No need updating object: " + JSON.stringify(entryClone));
-            }*/
-            await collections.erc20Transactions.replaceOne({ _id: el._id }, entry);
-        }
     }
 }

@@ -4,13 +4,9 @@ import * as dotenv from "dotenv";
 import { parse } from "ts-command-line-args";
 import {
     clearDatabase,
-    clearOldVersionERC20TransactionEntries,
-    clearOldVersionMonitoredAddresses,
     connectToDatabase,
     getLastBlockEntry,
 } from "./src/mongo_connector";
-import { CURRENT_MONITORED_ADDRESS_VERSION } from "./src/model/MonitoredAddresses";
-import { CURRENT_ERC20_TRANSACTION_VERSION } from "./src/model/TransactionEntry";
 
 //load config from .env
 
@@ -43,9 +39,6 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
 
     console.log("Connecting to database...");
     await connectToDatabase();
-
-    await clearOldVersionMonitoredAddresses(CURRENT_MONITORED_ADDRESS_VERSION);
-    await clearOldVersionERC20TransactionEntries(CURRENT_ERC20_TRANSACTION_VERSION);
 
     if (args.clearDatabase) {
         console.log("Clear all database entries (remove for production)...");
