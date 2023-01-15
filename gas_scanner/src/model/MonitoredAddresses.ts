@@ -12,6 +12,6 @@ export class MonitoredAddress {
     transactionsLastHour: number = 0;
     glmTransferredLast24hours: number = 0;
     gasFeesPaidLast24hours: number = 0;
-    uniqueRecipients: {[address: string]: RecipientInfo} = {};
+    uniqueRecipients: { [address: string]: RecipientInfo } = {};
     version = CURRENT_MONITORED_ADDRESS_VERSION;
 }

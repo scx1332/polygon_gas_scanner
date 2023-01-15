@@ -1,4 +1,4 @@
-import {connectToDatabase, getLastBlocks, getTimeFrameEntry} from "./src/mongo_connector";
+import { connectToDatabase, getLastBlocks, getTimeFrameEntry } from "./src/mongo_connector";
 import { ChildProcess, spawn } from "child_process";
 
 import { Logger } from "tslog";
@@ -20,7 +20,12 @@ class Watchdog {
     allowed_seconds_behind: number;
     check_every_ms: number;
 
-    constructor(after_kill_delay_ms: number, after_start_delay: number, allowed_seconds_behind: number, check_every_ms: number) {
+    constructor(
+        after_kill_delay_ms: number,
+        after_start_delay: number,
+        allowed_seconds_behind: number,
+        check_every_ms: number,
+    ) {
         this.after_kill_delay_ms = after_kill_delay_ms;
         this.after_start_delay = after_start_delay;
         this.allowed_seconds_behind = allowed_seconds_behind;
@@ -45,26 +50,25 @@ class Watchdog {
     }
 
     startProcessPrivate(commandLine: string): ChildProcess {
-        let useShell = (process.platform == "win32");
+        let useShell = process.platform == "win32";
         let command_string = commandLine.trim().replace("  ", " ");
         log.info("Starting command: " + command_string);
         let command_arr = command_string.split(" ");
         if (command_arr.length < 1) {
-            throw "set env WATCHDOG_START_COMMAND"
+            throw "set env WATCHDOG_START_COMMAND";
         }
         let command = command_arr[0];
         let args = command_arr.slice(1);
         let subprocess = spawn(command, args, { shell: useShell });
 
-        subprocess.stdout?.on('data', (data: Buffer) => this.processStdOut(data));
-        subprocess.stderr?.on('data', (data: Buffer) => this.processStdErr(data));
+        subprocess.stdout?.on("data", (data: Buffer) => this.processStdOut(data));
+        subprocess.stderr?.on("data", (data: Buffer) => this.processStdErr(data));
 
-        subprocess.on('exit', (code: number) => this.processExit(code));
-        subprocess.on('close', (code: number) => this.processClose(code));
+        subprocess.on("exit", (code: number) => this.processExit(code));
+        subprocess.on("close", (code: number) => this.processClose(code));
 
         return subprocess;
     }
-
 
     startServerProcess() {
         if (!this.gas_server_process && process.env.WATCHDOG_START_SERVER) {
@@ -91,10 +95,9 @@ class Watchdog {
         if (process.platform == "win32") {
             if (this.gas_scanner_process?.pid) {
                 log.info(`taskkill /pid ${this.gas_scanner_process?.pid} /t /f`);
-                spawn("taskkill", ["/pid", this.gas_scanner_process?.pid.toString(), '/t', '/f'], { shell: true });
+                spawn("taskkill", ["/pid", this.gas_scanner_process?.pid.toString(), "/t", "/f"], { shell: true });
             }
-        }
-        else {
+        } else {
             this.gas_scanner_process?.kill();
         }
         log.warn("Waiting for process to kill...");
@@ -110,7 +113,7 @@ class Watchdog {
         while (true) {
             if (!this.gas_scanner_process) {
                 this.startGasScannerProcess();
-                log.info("Waiting after process started...")
+                log.info("Waiting after process started...");
                 await delay(this.after_start_delay);
                 this.startServerProcess();
                 this.startGasScannerAggregator();
@@ -128,17 +131,19 @@ class Watchdog {
 
             let differenceInSeconds = (dtNow - dt) / 1000.0;
 
-            if (differenceInSeconds > this.allowed_seconds_behind && differenceInSeconds > lastDifferenceInSeconds && lastDifferenceInSeconds != 0) {
+            if (
+                differenceInSeconds > this.allowed_seconds_behind &&
+                differenceInSeconds > lastDifferenceInSeconds &&
+                lastDifferenceInSeconds != 0
+            ) {
                 await this.killProcess();
             }
             lastDifferenceInSeconds = differenceInSeconds;
 
             log.debug(`Last update is ${differenceInSeconds} seconds old`);
         }
-
     }
 }
-
 
 async function main() {
     await connectToDatabase();
@@ -152,9 +157,9 @@ async function main() {
 }
 
 main()
-    .then(text => {
+    .then((text) => {
         log.info("Watchog finished");
     })
-    .catch(err => {
+    .catch((err) => {
         log.error(`Watchdog finished with error: ${err}`);
     });

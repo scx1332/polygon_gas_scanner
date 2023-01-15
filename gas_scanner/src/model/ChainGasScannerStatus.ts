@@ -1,4 +1,3 @@
-
 export class ChainGasScannerStatus {
     name = "MainScanner_" + new Date().toISOString();
     processedTransactionCount = 0;

@@ -3,20 +3,18 @@ import { BlockInfo } from "./model/BlockInfo";
 import { TimeFrameBlockData } from "./model/TimeFrameBlockData";
 import { TimeFrameStatistics } from "./model/TimeFrameStatistics";
 import { MinGasBlocksHistogram } from "./model/MinGasBlocksHistogram";
-import {TransactionERC20Entry} from "./model/TransactionEntry";
-import {MonitoredAddress} from "./model/MonitoredAddresses";
-import {IndexSpecification} from "mongodb";
-
+import { TransactionERC20Entry } from "./model/TransactionEntry";
+import { MonitoredAddress } from "./model/MonitoredAddresses";
+import { IndexSpecification } from "mongodb";
 
 export const collections: {
-    blockInfoCollection?: mongoDB.Collection,
-    timeFrameInfoCollection?: mongoDB.Collection,
-    histogramCollection?: mongoDB.Collection,
-    timeFrameBlockDataCollection?: mongoDB.Collection,
-    erc20Transactions?: mongoDB.Collection
-    monitoredAddresses?: mongoDB.Collection
-} = {}
-
+    blockInfoCollection?: mongoDB.Collection;
+    timeFrameInfoCollection?: mongoDB.Collection;
+    histogramCollection?: mongoDB.Collection;
+    timeFrameBlockDataCollection?: mongoDB.Collection;
+    erc20Transactions?: mongoDB.Collection;
+    monitoredAddresses?: mongoDB.Collection;
+} = {};
 
 export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     if (process.env.MONGO_DB_CONNECTION_STRING === undefined) {
@@ -38,19 +36,22 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     collections.erc20Transactions = db.collection("ERC20Transaction");
     collections.monitoredAddresses = db.collection("MonitoredAddress");
 
-    await collections.blockInfoCollection.createIndex(  { "blockNo": 1 },{ unique: true });
-    await collections.blockInfoCollection.createIndex(  { "blockTime": 1 },{ unique: false });
+    await collections.blockInfoCollection.createIndex({ blockNo: 1 }, { unique: true });
+    await collections.blockInfoCollection.createIndex({ blockTime: 1 }, { unique: false });
 
-    await collections.timeFrameBlockDataCollection.createIndex(  { "timeFrameStart": 1 },{ unique: false });
-    await collections.timeFrameBlockDataCollection.createIndex(  { "timeSpanSeconds": 1 },{ unique: false });
-    await collections.timeFrameBlockDataCollection.createIndex(  { "timeFrameStart": 1, "timeSpanSeconds": 1 },{ unique: true });
+    await collections.timeFrameBlockDataCollection.createIndex({ timeFrameStart: 1 }, { unique: false });
+    await collections.timeFrameBlockDataCollection.createIndex({ timeSpanSeconds: 1 }, { unique: false });
+    await collections.timeFrameBlockDataCollection.createIndex(
+        { timeFrameStart: 1, timeSpanSeconds: 1 },
+        { unique: true },
+    );
 
-    await collections.erc20Transactions.createIndex(  { "txid": 1 },{ unique: true });
-    await collections.erc20Transactions.createIndex(  { "datetime": 1 },{ unique: false });
-    await collections.erc20Transactions.createIndex(  { "from": 1 },{ unique: false });
-    await collections.erc20Transactions.createIndex(  { "erc20from": 1 },{ unique: false });
+    await collections.erc20Transactions.createIndex({ txid: 1 }, { unique: true });
+    await collections.erc20Transactions.createIndex({ datetime: 1 }, { unique: false });
+    await collections.erc20Transactions.createIndex({ from: 1 }, { unique: false });
+    await collections.erc20Transactions.createIndex({ erc20from: 1 }, { unique: false });
 
-    await collections.monitoredAddresses.createIndex(  { "address": 1 },{ unique: true });
+    await collections.monitoredAddresses.createIndex({ address: 1 }, { unique: true });
 
     let indexList = await collections.blockInfoCollection.indexes();
 
@@ -84,29 +85,30 @@ export async function getLastBlocks(num: number): Promise<Array<BlockInfo>> {
 
 export async function clearOldVersionERC20TransactionEntries(version: number) {
     if (collections.erc20Transactions !== undefined) {
-        const result = await collections.erc20Transactions.deleteMany({version: {$ne: version}});
+        const result = await collections.erc20Transactions.deleteMany({ version: { $ne: version } });
     }
 }
-
 
 export async function clearOldVersionMonitoredAddresses(version: number) {
     if (collections.monitoredAddresses !== undefined) {
-        const result = await collections.monitoredAddresses.deleteMany({version: {$ne: version}});
+        const result = await collections.monitoredAddresses.deleteMany({ version: { $ne: version } });
     }
 }
-
 
 export async function clearOldVersionTimeFrameEntries(version: number) {
     if (collections.timeFrameBlockDataCollection !== undefined) {
-        const result = await collections.timeFrameBlockDataCollection.deleteMany({version: {$ne: version}});
+        const result = await collections.timeFrameBlockDataCollection.deleteMany({ version: { $ne: version } });
     }
 }
-
 
 export async function getLastTimeframes(num: number, timeSpanSeconds: number): Promise<Array<TimeFrameBlockData>> {
     let array = new Array<TimeFrameBlockData>();
     if (collections.timeFrameBlockDataCollection !== undefined) {
-        const result = await collections.timeFrameBlockDataCollection.find({ timeSpanSeconds: { "$eq": timeSpanSeconds } }).sort({ timeFrameStart: -1 }).limit(num).toArray();
+        const result = await collections.timeFrameBlockDataCollection
+            .find({ timeSpanSeconds: { $eq: timeSpanSeconds } })
+            .sort({ timeFrameStart: -1 })
+            .limit(num)
+            .toArray();
         for (let res of result) {
             array.push(Object.assign(new TimeFrameBlockData(), res));
         }
@@ -117,7 +119,10 @@ export async function getLastTimeframes(num: number, timeSpanSeconds: number): P
 export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.find({ blockNo: { $gte: minBlock } }).sort({ blockNo: -1 }).toArray();
+        const result = await collections.blockInfoCollection
+            .find({ blockNo: { $gte: minBlock } })
+            .sort({ blockNo: -1 })
+            .toArray();
         for (let res of result) {
             array.push(Object.assign(new BlockInfo(), res));
         }
@@ -128,7 +133,10 @@ export async function getBlockEntriesGreaterThan(minBlock: number): Promise<Arra
 export async function getBlockEntriesNewerThan(minDate: Date): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.find({ blockTime: { $gte: minDate.toISOString() } }).sort({ blockNo: -1 }).toArray();
+        const result = await collections.blockInfoCollection
+            .find({ blockTime: { $gte: minDate.toISOString() } })
+            .sort({ blockNo: -1 })
+            .toArray();
         for (let res of result) {
             array.push(Object.assign(new BlockInfo(), res));
         }
@@ -136,11 +144,13 @@ export async function getBlockEntriesNewerThan(minDate: Date): Promise<Array<Blo
     return array;
 }
 
-
 export async function getBlockEntriesInRange(minBlock: number, maxBlock: number): Promise<Array<BlockInfo>> {
     let array = new Array<BlockInfo>();
     if (collections.blockInfoCollection !== undefined) {
-        const result = await collections.blockInfoCollection.find({ "blockNo": { $gte: minBlock, $lt: maxBlock } }).sort({ blockNo: 1 }).toArray();
+        const result = await collections.blockInfoCollection
+            .find({ blockNo: { $gte: minBlock, $lt: maxBlock } })
+            .sort({ blockNo: 1 })
+            .toArray();
         for (let res of result) {
             array.push(Object.assign(new BlockInfo(), res));
         }
@@ -162,7 +172,7 @@ export async function addMonitoredAddress(entry: MonitoredAddress) {
 export async function getMonitoredAddresses() {
     let array = new Array<MonitoredAddress>();
     if (collections.monitoredAddresses !== undefined) {
-        const result = await collections.monitoredAddresses.find({ }).toArray();
+        const result = await collections.monitoredAddresses.find({}).toArray();
         for (let res of result) {
             array.push(Object.assign(new MonitoredAddress(), res));
         }
@@ -185,7 +195,7 @@ export async function addTimeBlockDataEntry(entry: TimeFrameBlockData) {
     if (collections.timeFrameBlockDataCollection !== undefined) {
         const el = await collections.timeFrameBlockDataCollection.findOne({
             timeFrameStart: entry.timeFrameStart,
-            timeSpanSeconds: entry.timeSpanSeconds
+            timeSpanSeconds: entry.timeSpanSeconds,
         });
         if (el == null) {
             const result = await collections.timeFrameBlockDataCollection.insertOne(entry);
@@ -249,10 +259,10 @@ export async function clearDatabase() {
     }
 }
 
-export async function getERC20TransactionsNewerThan(minDate: Date) : Promise<Array<TransactionERC20Entry>> {
-    let array = new Array<TransactionERC20Entry>()
+export async function getERC20TransactionsNewerThan(minDate: Date): Promise<Array<TransactionERC20Entry>> {
+    let array = new Array<TransactionERC20Entry>();
     if (collections.erc20Transactions !== undefined) {
-        let result = await collections.erc20Transactions.find({datetime: {$gte: minDate.toISOString()}}).toArray();
+        let result = await collections.erc20Transactions.find({ datetime: { $gte: minDate.toISOString() } }).toArray();
         for (let res of result) {
             array.push(Object.assign(new TransactionERC20Entry(), res));
         }
@@ -260,9 +270,8 @@ export async function getERC20TransactionsNewerThan(minDate: Date) : Promise<Arr
     return array;
 }
 
-
-export async function getERC20TransactionsFilter(mongo_filter:any) : Promise<Array<TransactionERC20Entry>> {
-    let array = new Array<TransactionERC20Entry>()
+export async function getERC20TransactionsFilter(mongo_filter: any): Promise<Array<TransactionERC20Entry>> {
+    let array = new Array<TransactionERC20Entry>();
     if (collections.erc20Transactions !== undefined) {
         let result = await collections.erc20Transactions.find(mongo_filter).sort({ nonce: 1 }).toArray();
         for (let res of result) {
@@ -272,18 +281,19 @@ export async function getERC20TransactionsFilter(mongo_filter:any) : Promise<Arr
     return array;
 }
 
-export async function getERC20Transactions(address:string) : Promise<Array<TransactionERC20Entry>> {
-    let array = new Array<TransactionERC20Entry>()
+export async function getERC20Transactions(address: string): Promise<Array<TransactionERC20Entry>> {
+    let array = new Array<TransactionERC20Entry>();
     if (collections.erc20Transactions !== undefined) {
-        let result = await collections.erc20Transactions.find({from: {"$eq": address}}).sort({ nonce: 1 }).toArray();
+        let result = await collections.erc20Transactions
+            .find({ from: { $eq: address } })
+            .sort({ nonce: 1 })
+            .toArray();
         for (let res of result) {
             array.push(Object.assign(new TransactionERC20Entry(), res));
         }
     }
     return array;
 }
-
-
 
 export async function addERC20TransactionEntry(entry: TransactionERC20Entry) {
     if (collections.erc20Transactions !== undefined) {
@@ -304,5 +314,3 @@ export async function addERC20TransactionEntry(entry: TransactionERC20Entry) {
         }
     }
 }
-
-

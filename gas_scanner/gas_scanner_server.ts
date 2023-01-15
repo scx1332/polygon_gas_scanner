@@ -1,16 +1,21 @@
-import express, {Request} from 'express';
+import express, { Request } from "express";
 import {
     connectToDatabase,
-    getBlockEntriesGreaterThan, getBlockEntriesInRange, getERC20Transactions, getERC20TransactionsFilter,
+    getBlockEntriesGreaterThan,
+    getBlockEntriesInRange,
+    getERC20Transactions,
+    getERC20TransactionsFilter,
     getHistEntry,
-    getLastBlockEntry, getLastBlocks, getLastTimeframes, getMonitoredAddresses,
-    getTimeFrameEntry
+    getLastBlockEntry,
+    getLastBlocks,
+    getLastTimeframes,
+    getMonitoredAddresses,
+    getTimeFrameEntry,
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
-import {BigNumber} from "ethers";
-import {bignumberToGwei} from "./utils";
+import { BigNumber } from "ethers";
+import { bignumberToGwei } from "./utils";
 let cors = require("cors");
-
 
 const app = express();
 app.use(cors());
@@ -20,9 +25,9 @@ dotenv.config();
 let PORT = parseInt(process.env.SERVER_LISTEN_PORT ?? "7888");
 
 // Handling GET / Request
-app.get('/welcome_test', (req, res) => {
-    res.send('Hello!');
-})
+app.get("/welcome_test", (req, res) => {
+    res.send("Hello!");
+});
 
 class GasInfo {
     minGasPrice: string = "";
@@ -40,7 +45,7 @@ let cacheValidityMs: number = parseInt(process.env.SERVER_CACHE_VALIDITY ?? "200
 
 let cachedGasInfo: GasInfo | undefined;
 let cachedGasInfoTime: number = 0;
-app.get('/polygon/gas-info/current', async (req, res) => {
+app.get("/polygon/gas-info/current", async (req, res) => {
     try {
         if (Date.now() - cachedGasInfoTime > cacheValidityMs) {
             let tfe = await getTimeFrameEntry("last_10_block");
@@ -65,31 +70,28 @@ app.get('/polygon/gas-info/current', async (req, res) => {
             cachedGasInfo = gasInfo;
             cachedGasInfoTime = Date.now();
         }
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(cachedGasInfo));
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-app.get('/polygon/block-info/last-blocks', async (req, res) => {
+app.get("/polygon/block-info/last-blocks", async (req, res) => {
     try {
         //@ts-ignore
         let block_count = parseInt(req.query.block_count);
 
         let blocks = await getLastBlocks(block_count);
 
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(blocks));
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-
-app.get('/polygon/block-info/last-time-frames', async (req, res) => {
+app.get("/polygon/block-info/last-time-frames", async (req, res) => {
     try {
         //@ts-ignore
         let block_count = parseInt(req.query.block_count);
@@ -98,16 +100,14 @@ app.get('/polygon/block-info/last-time-frames', async (req, res) => {
 
         let timeframes = await getLastTimeframes(block_count, timespan_seconds);
 
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(timeframes));
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-
-app.get('/polygon/block-info/list', async (req, res) => {
+app.get("/polygon/block-info/list", async (req, res) => {
     try {
         //let num = await getLastBlockEntry();
 
@@ -116,19 +116,16 @@ app.get('/polygon/block-info/list', async (req, res) => {
         //@ts-ignore
         let block_start = parseInt(req.query.block_start);
 
-
         let blocks = await getBlockEntriesInRange(block_start, block_start + block_count);
 
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(blocks));
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-
-app.get('/polygon/gas-info/waiting_times', async (req, res) => {
+app.get("/polygon/gas-info/waiting_times", async (req, res) => {
     try {
         let num = await getLastBlockEntry();
 
@@ -137,12 +134,11 @@ app.get('/polygon/gas-info/waiting_times', async (req, res) => {
         //@ts-ignore
         let block_start = parseInt(req.query.block_start);
 
-
         let blocks = await getBlockEntriesInRange(block_start, block_start + block_count);
 
         let waiting_times = new Map<string, number>();
 
-        for (let value = 30.00; value < 31.0; value += 0.01) {
+        for (let value = 30.0; value < 31.0; value += 0.01) {
             let max_block_wait = -1;
             let wait_time = 0;
             for (let block of blocks) {
@@ -157,17 +153,15 @@ app.get('/polygon/gas-info/waiting_times', async (req, res) => {
             waiting_times.set(value.toFixed(2), max_block_wait);
         }
 
-
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         //res.end(JSON.stringify(blocks));
-        res.end(JSON.stringify({ "block_analyzed": blocks.length, "waiting_times": Object.fromEntries(waiting_times) }));
-
+        res.end(JSON.stringify({ block_analyzed: blocks.length, waiting_times: Object.fromEntries(waiting_times) }));
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-app.get('/polygon/gas-info/waiting_times_avg', async (req, res) => {
+app.get("/polygon/gas-info/waiting_times_avg", async (req, res) => {
     try {
         let num = await getLastBlockEntry();
 
@@ -176,18 +170,17 @@ app.get('/polygon/gas-info/waiting_times_avg', async (req, res) => {
         //@ts-ignore
         let block_start = parseInt(req.query.block_start);
 
-
         let blocks = await getBlockEntriesInRange(block_start, block_start + block_count);
 
         let waiting_times = new Map<string, number>();
 
-        for (let value = 30.00; value < 31.0; value += 0.01) {
+        for (let value = 30.0; value < 31.0; value += 0.01) {
             let sum_block_wait = 0;
             let sum_block_wait_norm = 0;
             let wait_time = 0;
             for (let block of blocks) {
                 if (block.minGas >= 1.0 && block.minGas <= value) {
-                    sum_block_wait += wait_time * wait_time / 2.0;
+                    sum_block_wait += (wait_time * wait_time) / 2.0;
                     wait_time = 0;
                 }
                 wait_time += 1;
@@ -196,37 +189,33 @@ app.get('/polygon/gas-info/waiting_times_avg', async (req, res) => {
             waiting_times.set(value.toFixed(3), sum_block_wait / sum_block_wait_norm);
         }
 
-
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         //res.end(JSON.stringify(blocks));
-        res.end(JSON.stringify({ "block_analyzed": blocks.length, "waiting_times": Object.fromEntries(waiting_times) }));
-
+        res.end(JSON.stringify({ block_analyzed: blocks.length, waiting_times: Object.fromEntries(waiting_times) }));
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-app.get('/polygon/gas-info/hist10', async (req, res) => {
+app.get("/polygon/gas-info/hist10", async (req, res) => {
     try {
         let he = await getHistEntry("hist_10_block");
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(he));
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-app.get('/polygon/monitored-addresses/all', async (req, res) => {
+app.get("/polygon/monitored-addresses/all", async (req, res) => {
     try {
         let me = await getMonitoredAddresses();
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(me));
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
 interface ITransactionFilter {
     address?: string;
@@ -269,8 +258,7 @@ class RecipientSummaryExternal {
     transactionCount: number = 0;
 }
 
-
-app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransactionFilter>, res) => {
+app.get("/polygon/transactions/filter", async (req: Request<{}, {}, {}, ITransactionFilter>, res) => {
     try {
         let filters: any = {};
 
@@ -304,9 +292,8 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
         let recipients = new Map<string, RecipientSummaryInternal>();
         let senders = new Map<string, SenderSummaryInternal>();
 
-        let recipientsExternal : {[address: string] : RecipientSummaryExternal} = {};
-        let sendersExternal : {[address: string] : RecipientSummaryExternal} = {};
-
+        let recipientsExternal: { [address: string]: RecipientSummaryExternal } = {};
+        let sendersExternal: { [address: string]: RecipientSummaryExternal } = {};
 
         if (req.query.aggregate == "1") {
             let erc20amount = BigNumber.from(0);
@@ -315,7 +302,6 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
             let erc20transactions = 0;
             let otherTransactions = 0;
             for (let transaction of transactions) {
-
                 let recipient: RecipientSummaryInternal | undefined;
                 if (transaction.erc20to) {
                     recipient = recipients.get(transaction.erc20to);
@@ -333,7 +319,6 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
                     }
                 }
 
-
                 if (transaction.erc20amount) {
                     let amountBig = BigNumber.from(transaction.erc20amount);
                     erc20amount = erc20amount.add(amountBig);
@@ -348,8 +333,7 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
                     }
 
                     erc20transactions += 1;
-                }
-                else {
+                } else {
                     otherTransactions += 1;
                 }
                 if (transaction.gasUsed && transaction.gasPrice) {
@@ -373,9 +357,9 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
                 let sendInt = it[1];
                 let sendExt = new SenderSummaryExternal();
                 sendExt.sumErc20Exact = sendInt.sumErc20Exact.toString();
-                sendExt.sumErc20 = bignumberToGwei(sendInt.sumErc20Exact) * 1.0E-9;
+                sendExt.sumErc20 = bignumberToGwei(sendInt.sumErc20Exact) * 1.0e-9;
                 sendExt.gasPaidExact = sendInt.gasPaidExact.toString();
-                sendExt.gasPaid = bignumberToGwei(sendInt.gasPaidExact) * 1.0E-9;
+                sendExt.gasPaid = bignumberToGwei(sendInt.gasPaidExact) * 1.0e-9;
                 sendExt.gasUsed = sendInt.gasUsed;
                 sendExt.transactionCount = sendInt.transactionCount;
                 sendersExternal[address] = sendExt;
@@ -386,59 +370,54 @@ app.get('/polygon/transactions/filter', async (req : Request<{}, {}, {}, ITransa
                 let recInt = it[1];
                 let recExt = new RecipientSummaryExternal();
                 recExt.sumErc20Exact = recInt.sumErc20Exact.toString();
-                recExt.sumErc20 = bignumberToGwei(recInt.sumErc20Exact) * 1.0E-9;
+                recExt.sumErc20 = bignumberToGwei(recInt.sumErc20Exact) * 1.0e-9;
                 recExt.gasPaidExact = recInt.gasPaidExact.toString();
-                recExt.gasPaid = bignumberToGwei(recInt.gasPaidExact) * 1.0E-9;
+                recExt.gasPaid = bignumberToGwei(recInt.gasPaidExact) * 1.0e-9;
                 recExt.gasUsed = recInt.gasUsed;
                 recExt.transactionCount = recInt.transactionCount;
                 recipientsExternal[address] = recExt;
             }
-            res.setHeader('Content-Type', 'application/json');
+            res.setHeader("Content-Type", "application/json");
 
             let resp = {
-                erc20amount: (bignumberToGwei(erc20amount) * 1.0E-9).toFixed(6),
-                erc20amountExact : erc20amount.toString(),
+                erc20amount: (bignumberToGwei(erc20amount) * 1.0e-9).toFixed(6),
+                erc20amountExact: erc20amount.toString(),
                 gasPaidExact: gasPaid.toString(),
-                gasPaid: (bignumberToGwei(gasPaid) * 1.0E-9).toFixed(6),
+                gasPaid: (bignumberToGwei(gasPaid) * 1.0e-9).toFixed(6),
                 erc20transactions: erc20transactions,
                 otherTransactions: otherTransactions,
                 senders: sendersExternal,
-                recipients: recipientsExternal
+                recipients: recipientsExternal,
             };
             res.end(JSON.stringify(resp));
-
         } else {
-            res.setHeader('Content-Type', 'application/json');
+            res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(transactions));
         }
-
     } catch (ex) {
         res.sendStatus(404);
     }
-})
+});
 
-app.get('/polygon/transactions/all', async (req, res) => {
+app.get("/polygon/transactions/all", async (req, res) => {
     try {
         //@ts-ignore
         let block_address = req.query.address.toString();
         if (block_address) {
             let transactions = await getERC20Transactions(block_address);
-            res.setHeader('Content-Type', 'application/json');
+            res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(transactions));
         } else {
-            res.setHeader('Content-Type', 'application/json');
+            res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify("not-found"));
         }
     } catch (ex) {
         res.sendStatus(404);
     }
-})
-
+});
 
 connectToDatabase().then(() => {
     app.listen(PORT, () => {
-        console.log('The application is listening '
-            + 'on port http://localhost:' + PORT);
-    })
-})
-
+        console.log("The application is listening " + "on port http://localhost:" + PORT);
+    });
+});

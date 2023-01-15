@@ -1,4 +1,3 @@
-
 export class MinGasBlocksHistogram {
     name = "";
     blockNums = Array<number>();
