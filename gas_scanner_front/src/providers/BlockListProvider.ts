@@ -61,7 +61,7 @@ export class BlockListProvider {
     async tick() {
         try {
             if (this.observers.length == 0) {
-                console.log("BlockListProvider: inactive due to lack of observers");
+                //console.log("BlockListProvider: inactive due to lack of observers");
                 return;
             }
 

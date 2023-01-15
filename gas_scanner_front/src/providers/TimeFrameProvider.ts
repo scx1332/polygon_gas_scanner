@@ -59,6 +59,11 @@ export class TimeFrameProvider {
 
     async tick() {
         try {
+            if (this.observers.length == 0) {
+                //console.log("BlockListProvider: inactive due to lack of observers");
+                return;
+            }
+
             let timeFrameData60 = await this.fetchLastTimeFrames(60);
             let timeFrameData3600 = await this.fetchLastTimeFrames(3600);
             console.log("TimeFrameProvider: " + timeFrameData60);
