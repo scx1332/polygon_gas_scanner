@@ -146,6 +146,7 @@ export class ChainGasScanner {
                 let blockInfo = this.blockMap.get(this.blockNumber);
                 if (blockInfo === undefined) {
                     blockInfo = new BlockInfo();
+                    blockInfo.blockNo = this.blockNumber;
                     blockInfo.gasLimit = block.gasLimit.toNumber();
                     blockInfo.transCount = block.transactions.length;
                     blockInfo.blockTime = new Date(block.timestamp * 1000).toISOString();
@@ -176,7 +177,7 @@ export class ChainGasScanner {
                 {
                     let gas_prices_array = this.transReceiptMap.get(this.blockNumber - 1);
                     let bi = this.blockMap.get(this.blockNumber - 1);
-                    if (bi !== undefined && gas_prices_array !== undefined) {
+                    if (bi !== undefined && (gas_prices_array !== undefined || bi.transCount === 0)) {
                         if (gas_prices_array && gas_prices_array.length > 0) {
                             gas_prices_array.sort((a, b) => bignumberToGwei(a.effectiveGasPrice) - bignumberToGwei(b.effectiveGasPrice));
                             if (bi.minGas != bignumberToGwei(gas_prices_array[0].effectiveGasPrice)) {
