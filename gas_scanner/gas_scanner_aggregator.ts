@@ -4,13 +4,10 @@ import {
     addTimeBlockDataEntry,
     clearOldVersionTimeFrameEntries,
     connectToDatabase,
-    getBlockEntriesGreaterThan,
     getBlockEntriesNewerThan,
-    getERC20Transactions,
     getERC20TransactionsNewerThan,
     getLastTimeframes,
     getMonitoredAddresses,
-    getTimeFrameEntry,
 } from "./src/mongo_connector";
 import * as dotenv from "dotenv";
 import { CURRENT_TIME_FRAME_BLOCK_VERSION, TimeFrameBlockData } from "./src/model/TimeFrameBlockData";
@@ -54,8 +51,8 @@ function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo
 }
 
 function getDateFloor(date: Date, unit: string, units: number): { date: Date; timeSpanSeconds: number } {
-    let years = date.getUTCFullYear();
-    let months = date.getUTCMonth();
+    const years = date.getUTCFullYear();
+    const months = date.getUTCMonth();
     let days = date.getUTCDate();
     let hours = date.getUTCHours();
     let minutes = date.getUTCMinutes();
@@ -82,7 +79,7 @@ function getDateFloor(date: Date, unit: string, units: number): { date: Date; ti
         days = days - (days % units);
         timeSpanSeconds = 24 * 3600 * units;
     }
-    let res = new Date(Date.UTC(years, months, days, hours, minutes, seconds, 0));
+    const res = new Date(Date.UTC(years, months, days, hours, minutes, seconds, 0));
     return { date: res, timeSpanSeconds: timeSpanSeconds };
 }
 
@@ -90,12 +87,12 @@ async function aggregate(blocks: Array<BlockInfo>, timeFrameUnit: string, timeFr
     let startTime = new Date();
     let tfs = new TimeFrameBlockData();
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx += 1) {
-        let block = blocks[blockIdx];
+        const block = blocks[blockIdx];
         //log.info(JSON.stringify(block));
 
-        let res = getDateFloor(new Date(block.blockTime), timeFrameUnit, timeFrameUnits);
-        let date_floor = res.date;
-        let date_timespan = res.timeSpanSeconds;
+        const res = getDateFloor(new Date(block.blockTime), timeFrameUnit, timeFrameUnits);
+        const date_floor = res.date;
+        const date_timespan = res.timeSpanSeconds;
 
         if (blockIdx == 0) {
             startTime = date_floor;
@@ -124,8 +121,8 @@ async function main() {
 
     await connectToDatabase();
 
-    let aggregator_delay_seconds = parseInt(process.env.AGGREGATOR_DELAY_SECONDS ?? "60");
-    let aggregator_delay_start = parseInt(process.env.AGGREGATOR_DELAY_START ?? "60");
+    const aggregator_delay_seconds = parseInt(process.env.AGGREGATOR_DELAY_SECONDS ?? "60");
+    const aggregator_delay_start = parseInt(process.env.AGGREGATOR_DELAY_START ?? "60");
 
     log.info(`Waiting for: ${aggregator_delay_start} seconds`);
     await delay(aggregator_delay_start * 1000);
@@ -134,8 +131,8 @@ async function main() {
     log.info(`Clearing database form old version entries...`);
     await clearOldVersionTimeFrameEntries(CURRENT_TIME_FRAME_BLOCK_VERSION);
 
-    while (true) {
-        let params = [
+    for(;;) {
+        const params = [
             {
                 timeFrameUnit: "minutes",
                 timeFrameUnits: 1,
@@ -158,37 +155,37 @@ async function main() {
             },
         ];
         let minDate: Date = new Date();
-        for (let param of params) {
-            let res = getDateFloor(new Date(), param.timeFrameUnit, param.timeFrameUnits);
-            let lastTimeframes = await getLastTimeframes(2, res.timeSpanSeconds);
+        for (const param of params) {
+            const res = getDateFloor(new Date(), param.timeFrameUnit, param.timeFrameUnits);
+            const lastTimeframes = await getLastTimeframes(2, res.timeSpanSeconds);
             if (lastTimeframes.length < 2) {
                 //analyze all blocks when not found
                 minDate = new Date(2000, 1);
                 break;
             }
-            for (let tf of lastTimeframes) {
-                let dateCandidate = new Date(tf.timeFrameStart);
+            for (const tf of lastTimeframes) {
+                const dateCandidate = new Date(tf.timeFrameStart);
                 if (dateCandidate.getTime() < minDate.getTime()) {
                     minDate = dateCandidate;
                 }
             }
         }
-        let blocks = await getBlockEntriesNewerThan(minDate);
+        const blocks = await getBlockEntriesNewerThan(minDate);
         log.info(`There are ${blocks.length} returned by the database to analyze`);
 
         await delay(2000);
 
-        for (let param of params) {
+        for (const param of params) {
             await aggregate(blocks, param.timeFrameUnit, param.timeFrameUnits);
         }
 
         try {
-            let day_before = new Date();
+            const day_before = new Date();
             day_before.setDate(day_before.getDate() - 1);
-            let lastDayTransactions = await getERC20TransactionsNewerThan(day_before);
-            let monitoredAddresses = await getMonitoredAddresses();
-            let mapMonitoredAddresses = new Map<string, MonitoredAddress>();
-            for (let el of monitoredAddresses) {
+            const lastDayTransactions = await getERC20TransactionsNewerThan(day_before);
+            const monitoredAddresses = await getMonitoredAddresses();
+            const mapMonitoredAddresses = new Map<string, MonitoredAddress>();
+            for (const el of monitoredAddresses) {
                 mapMonitoredAddresses.set(el.address, el);
                 el.gasFeesPaidLast24hours = 0;
                 el.glmTransferredLast24hours = 0;
@@ -196,7 +193,7 @@ async function main() {
                 el.transactionsLastHour = 0;
                 el.uniqueRecipients = {};
             }
-            for (let trans of lastDayTransactions) {
+            for (const trans of lastDayTransactions) {
                 let monitoredAddress = mapMonitoredAddresses.get(trans.from.toLowerCase());
                 if (!monitoredAddress) {
                     monitoredAddress = new MonitoredAddress();
@@ -204,11 +201,11 @@ async function main() {
                     mapMonitoredAddresses.set(monitoredAddress.address, monitoredAddress);
                 }
                 monitoredAddress.transactionsLast24hours += 1;
-                let gasFee = bignumberToGwei(BigNumber.from(trans.gasPrice)) * parseInt(trans.gasUsed) * 1.0e-9;
+                const gasFee = bignumberToGwei(BigNumber.from(trans.gasPrice)) * parseInt(trans.gasUsed) * 1.0e-9;
                 monitoredAddress.gasFeesPaidLast24hours += gasFee;
                 let glmTransferred = 0.0;
                 if (trans.erc20amount != "") {
-                    let erc20transferred = BigNumber.from(trans.erc20amount);
+                    const erc20transferred = BigNumber.from(trans.erc20amount);
                     glmTransferred = bignumberToGwei(erc20transferred) * 1.0e-9;
                     monitoredAddress.glmTransferredLast24hours += glmTransferred;
                 }
@@ -225,7 +222,7 @@ async function main() {
                     }
                 }
             }
-            for (let el of monitoredAddresses) {
+            for (const el of monitoredAddresses) {
                 await addMonitoredAddress(el);
             }
         } catch (ex) {
@@ -239,7 +236,7 @@ async function main() {
 }
 
 main()
-    .then((text) => {
+    .then(() => {
         log.info("Aggregator finished");
     })
     .catch((err) => {

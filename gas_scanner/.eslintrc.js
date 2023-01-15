@@ -4,19 +4,7 @@ module.exports = {
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
     ],
-    settings: {
-        react: {
-            // Tells eslint-plugin-react to automatically detect the version of React to use.
-            version: 'detect',
-        },
-        // Tells eslint how to resolve imports
-        'import/resolver': {
-            node: {
-                paths: ['src'],
-                extensions: ['.js', '.jsx', '.ts', '.tsx'],
-            },
-        },
-    },
+    ignorePatterns: ['dist/', 'node_modules/', 'gas_scanner_server.ts'],
     rules: {
         // Add your own rules here to override ones from the extended configs.
     },

@@ -2,13 +2,10 @@ import { TransactionReceipt } from "@ethersproject/abstract-provider";
 import { bignumberToGwei, delay } from "../utils";
 import * as ethers from "ethers";
 import IERC20_abi from "./contracts/IERC20.abi.json";
-import * as mongoDB from "mongodb";
-import { BlockList } from "net";
 import {
     addBlockEntry,
     addERC20TransactionEntry,
     addMonitoredAddress,
-    getLastBlockEntry,
     getMonitoredAddresses,
     updateHistEntry,
     updateTimeFrameEntry,
@@ -36,9 +33,9 @@ export class ChainGasScanner {
     workerProcessTransactions: Promise<void> | undefined = undefined;
     workerGetBlocks: Promise<void> | undefined = undefined;
 
-    startingBlockNumber: number = 0;
-    blockNumber: number = 0;
-    blockTime: string = "";
+    startingBlockNumber = 0;
+    blockNumber = 0;
+    blockTime = "";
 
     monitoredAddresses = new Map<string, MonitoredAddress>();
 
@@ -49,17 +46,17 @@ export class ChainGasScanner {
     }
 
     async loadMonitoredAddresses() {
-        let list = await getMonitoredAddresses();
-        for (let addr of list) {
+        const list = await getMonitoredAddresses();
+        for (const addr of list) {
             this.monitoredAddresses.set(addr.address.toLowerCase(), addr);
         }
     }
 
     computeBlockHistogram(name: string, blockCount: number): MinGasBlocksHistogram {
-        let mgh = new MinGasBlocksHistogram();
+        const mgh = new MinGasBlocksHistogram();
         mgh.name = name;
         for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {
-            let bi = this.blockMap.get(blockNo);
+            const bi = this.blockMap.get(blockNo);
             if (bi !== undefined) {
                 mgh.blockNums.push(bi.blockNo);
                 mgh.minGas.push(bi.minGas);
@@ -70,10 +67,10 @@ export class ChainGasScanner {
     }
 
     computeTimeFrameStatistics(name: string, blockCount: number): TimeFrameStatistics {
-        let tfs = new TimeFrameStatistics();
+        const tfs = new TimeFrameStatistics();
         tfs.name = name;
         for (let blockNo = this.blockNumber - blockCount; blockNo < this.blockNumber; blockNo += 1) {
-            let bi = this.blockMap.get(blockNo);
+            const bi = this.blockMap.get(blockNo);
 
             if (bi !== undefined) {
                 if (tfs.firstBlockTime == "") {
@@ -106,23 +103,23 @@ export class ChainGasScanner {
                 this.blockNumber = await this.blockProvider.getBlockNumber();
             }
 
-            while (true) {
-                for (let blockNum of this.transReceiptMap.keys()) {
+            for (;;) {
+                for (const blockNum of this.transReceiptMap.keys()) {
                     if (blockNum < this.blockNumber - 10) {
                         this.transReceiptMap.delete(blockNum);
                     }
                 }
-                for (let blockNum of this.blockMap.keys()) {
+                for (const blockNum of this.blockMap.keys()) {
                     if (blockNum < this.blockNumber - 1200) {
                         this.blockMap.delete(blockNum);
                     }
                 }
 
-                let blockPromise = this.blockProvider.getBlock(this.blockNumber);
-                let blockNumberPromise = this.blockProvider.getBlockNumber();
+                const blockPromise = this.blockProvider.getBlock(this.blockNumber);
+                const blockNumberPromise = this.blockProvider.getBlockNumber();
 
-                let block = await blockPromise;
-                let blockNumberFromNetwork = await blockNumberPromise;
+                const block = await blockPromise;
+                const blockNumberFromNetwork = await blockNumberPromise;
 
                 if (blockNumberFromNetwork > this.blockNumber) {
                     console.warn(`Scanner is late ${blockNumberFromNetwork - this.blockNumber} blocks`);
@@ -157,16 +154,16 @@ export class ChainGasScanner {
                     this.blockMap.set(this.blockNumber, blockInfo);
                 }
 
-                let nextBatch = new Array<Promise<TransactionReceipt>>();
-                for (let transaction of block.transactions) {
+                const nextBatch = new Array<Promise<TransactionReceipt>>();
+                for (const transaction of block.transactions) {
                     //this.transactionsToProcess.push(transaction);
                     nextBatch.push(this.transactionsProvider.getTransactionReceipt(transaction));
                 }
                 //good moment to store data in db;
 
-                const query = { name: this.chainScannerStatus.name };
-                const update = { $set: this.chainScannerStatus };
-                const options = { upsert: true };
+                //const query = { name: this.chainScannerStatus.name };
+                //const update = { $set: this.chainScannerStatus };
+                //const options = { upsert: true };
 
                 //await this.mongoDBCollection.updateOne(query, update, options);
 
@@ -176,8 +173,8 @@ export class ChainGasScanner {
                 }
 
                 {
-                    let gas_prices_array = this.transReceiptMap.get(this.blockNumber - 1);
-                    let bi = this.blockMap.get(this.blockNumber - 1);
+                    const gas_prices_array = this.transReceiptMap.get(this.blockNumber - 1);
+                    const bi = this.blockMap.get(this.blockNumber - 1);
                     if (bi !== undefined && (gas_prices_array !== undefined || bi.transCount === 0)) {
                         if (gas_prices_array && gas_prices_array.length > 0) {
                             gas_prices_array.sort(
@@ -186,7 +183,7 @@ export class ChainGasScanner {
                             if (bi.minGas != bignumberToGwei(gas_prices_array[0].effectiveGasPrice)) {
                                 console.log("Something went wrong bi.minGas != gas_prices_array[0]");
                             }
-                            let firstTransGas = gas_prices_array[0].gasUsed.toNumber();
+                            const firstTransGas = gas_prices_array[0].gasUsed.toNumber();
                             if (firstTransGas < 50000 && gas_prices_array.length > 1) {
                                 bi.minGas = bignumberToGwei(gas_prices_array[1].effectiveGasPrice);
                             }
@@ -201,16 +198,16 @@ export class ChainGasScanner {
                     }
                 }
 
-                let mgh10 = this.computeBlockHistogram("hist_10_block", 10);
+                const mgh10 = this.computeBlockHistogram("hist_10_block", 10);
                 await updateHistEntry(mgh10);
 
-                let tfs10 = this.computeTimeFrameStatistics("last_10_block", 10);
+                const tfs10 = this.computeTimeFrameStatistics("last_10_block", 10);
                 await updateTimeFrameEntry(tfs10);
 
-                let tfs100 = this.computeTimeFrameStatistics("last_100_block", 100);
+                const tfs100 = this.computeTimeFrameStatistics("last_100_block", 100);
                 await updateTimeFrameEntry(tfs100);
 
-                let tfs1000 = this.computeTimeFrameStatistics("last_1000_block", 1000);
+                const tfs1000 = this.computeTimeFrameStatistics("last_1000_block", 1000);
                 await updateTimeFrameEntry(tfs1000);
 
                 this.chainScannerStatus.totalTransactionCount += nextBatch.length;
@@ -225,11 +222,11 @@ export class ChainGasScanner {
     }
 
     async processTransactionReceipt(transactionReceipt: TransactionReceipt) {
-        let transferCount = 0;
-        let addresses: { [address: string]: number } = {};
+        //const transferCount = 0;
+        //const addresses: { [address: string]: number } = {};
         //console.log("Gas price: " + transactionReceipt.effectiveGasPrice);
 
-        let blockNumber = transactionReceipt.blockNumber;
+        const blockNumber = transactionReceipt.blockNumber;
 
         let blockInfo = this.blockMap.get(blockNumber);
         if (blockInfo === undefined) {
@@ -242,7 +239,7 @@ export class ChainGasScanner {
             this.transReceiptMap.set(blockNumber, gasPricesArray);
         }
 
-        let effectiveGasPrice = bignumberToGwei(transactionReceipt.effectiveGasPrice);
+        const effectiveGasPrice = bignumberToGwei(transactionReceipt.effectiveGasPrice);
         //if gas price is lower than 1 gwei then it is special transaction (propably with zero gas)
         if (effectiveGasPrice >= 1.0) {
             gasPricesArray.push(transactionReceipt);
@@ -253,8 +250,8 @@ export class ChainGasScanner {
         }
         blockInfo.blockNo = transactionReceipt.blockNumber;
         blockInfo.gasUsed += transactionReceipt.gasUsed.toNumber();
-        let burnedFees = blockInfo.baseFeePrice * transactionReceipt.gasUsed.toNumber() * 1.0e-9;
-        let totalFees =
+        const burnedFees = blockInfo.baseFeePrice * transactionReceipt.gasUsed.toNumber() * 1.0e-9;
+        const totalFees =
             bignumberToGwei(transactionReceipt.effectiveGasPrice) * transactionReceipt.gasUsed.toNumber() * 1.0e-9;
 
         if (transactionReceipt.type == 2) {
@@ -264,7 +261,7 @@ export class ChainGasScanner {
         blockInfo.burnedFees += burnedFees;
         blockInfo.totalFees += totalFees;
 
-        /*for (let log of transactionReceipt.logs) {
+        /*for (const log of transactionReceipt.logs) {
             try {
                 console.log(`Log parsed`)
             } catch (e) {
@@ -276,29 +273,29 @@ export class ChainGasScanner {
         try {
             if (transactionReceipt.to != undefined && transactionReceipt.from != undefined) {
                 if (transactionReceipt.to.toLowerCase() == "0x0b220b82f3ea3b7f6d9a1d8ab58930c064a2b5bf") {
-                    let transactionInfo = await this.transactionsProvider.getTransaction(
+                    const transactionInfo = await this.transactionsProvider.getTransaction(
                         transactionReceipt.transactionHash,
                     );
-                    for (let log of transactionReceipt.logs) {
+                    for (const log of transactionReceipt.logs) {
                         try {
-                            let parsed = ERC20interface.parseLog(log);
+                            const parsed = ERC20interface.parseLog(log);
                             //console.log(JSON.stringify(parsed));
                             if (parsed.name == "Transfer") {
                                 //console.log("Block number: " + blockNumber);
                                 //console.log("Tx transaction: " + transactionReceipt.transactionHash);
 
-                                let tokenFrom = parsed.args[0];
-                                let tokenTo = parsed.args[1];
-                                let amount = parsed.args[2];
+                                const tokenFrom = parsed.args[0];
+                                const tokenTo = parsed.args[1];
+                                const amount = parsed.args[2];
 
                                 if (!this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
-                                    let ma = new MonitoredAddress();
+                                    const ma = new MonitoredAddress();
                                     ma.address = transactionReceipt.from.toString().toLowerCase();
                                     this.monitoredAddresses.set(ma.address.toLowerCase(), ma);
                                     await addMonitoredAddress(ma);
                                 }
 
-                                let newEntry = new TransactionERC20Entry();
+                                const newEntry = new TransactionERC20Entry();
                                 newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
                                 newEntry.datetime = blockInfo.blockTime;
                                 newEntry.nonce = transactionInfo.nonce;
@@ -320,7 +317,7 @@ export class ChainGasScanner {
                     }
                 } else {
                     if (this.monitoredAddresses.has(transactionReceipt.from.toLowerCase())) {
-                        let newEntry = new TransactionERC20Entry();
+                        const newEntry = new TransactionERC20Entry();
                         newEntry.txid = transactionReceipt.transactionHash.toString().toLowerCase();
                         newEntry.datetime = blockInfo.blockTime;
                         newEntry.nonce = transactionReceipt.transactionIndex;
@@ -341,24 +338,24 @@ export class ChainGasScanner {
             console.log(e);
         }
 
-        if (transferCount >= 2 && transferCount <= 3) {
-            for (let address in addresses) {
+        //if (transferCount >= 2 && transferCount <= 3) {
+        //    for (const address in addresses) {
                 //console.log(address);
-            }
-        }
-        if (transferCount >= 2 && transferCount <= 3) {
-            for (let address in addresses) {
+        //    }
+        //}
+        //if (transferCount >= 2 && transferCount <= 3) {
+        //    for (const address in addresses) {
                 //console.log(address);
-            }
-        }
+        //    }
+        //}
     }
 
     async processTransactions() {
-        while (true) {
+        for (;;) {
             try {
                 if (this.transactionReceiptsBatch.length > 0) {
-                    for (let promise of this.transactionReceiptsBatch) {
-                        let transactionReceipt = await promise;
+                    for (const promise of this.transactionReceiptsBatch) {
+                        const transactionReceipt = await promise;
                         if (transactionReceipt == null) {
                             //console.error("Cannot get transaction receipt + " + transaction);
                             continue;
@@ -366,7 +363,7 @@ export class ChainGasScanner {
                         await this.processTransactionReceipt(transactionReceipt);
                         this.chainScannerStatus.processedTransactionCount += 1;
                     }
-                    let droppedTransactions =
+                    const droppedTransactions =
                         this.chainScannerStatus.totalTransactionCount -
                         this.chainScannerStatus.processedTransactionCount;
                     this.chainScannerStatus.droppedTransactionCount = droppedTransactions;
@@ -377,7 +374,6 @@ export class ChainGasScanner {
                 }
 
                 await delay(100);
-                continue;
             } catch (e) {
                 this.transactionReceiptsBatch.length = 0;
                 console.error("Something went wrong, dropping transaction batch + " + e);

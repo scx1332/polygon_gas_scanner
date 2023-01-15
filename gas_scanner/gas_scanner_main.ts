@@ -17,7 +17,7 @@ import { CURRENT_ERC20_TRANSACTION_VERSION } from "./src/model/TransactionEntry"
 interface IGasScannerArguments {
     clearDatabase: boolean;
     fillMissingBlocks: boolean;
-    forceStartingBlockNumber?: Number;
+    forceStartingBlockNumber?: number;
     help?: boolean;
 }
 export const args = parse<IGasScannerArguments>(
@@ -61,11 +61,11 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
         }
     }
 
-    let p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
+    const p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
 
     await p.runWorkers();
 
-    while (true) {
+    for (;;) {
         await delay(100000);
     }
 })();
