@@ -21,7 +21,7 @@ import {BigNumber} from "ethers";
 
 
 dotenv.config();
-const log: Logger = new Logger({ name: "AGGREGATOR" });
+const log = new Logger({ name: "AGGREGATOR" });
 
 
 

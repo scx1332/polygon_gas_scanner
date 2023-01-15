@@ -1,0 +1,13 @@
+version: "3.3"  # optional since v1.27.0
+services:
+  mongodb_container:
+    image: mongo:latest
+    container_name: gas_scanner_mongo
+    volumes:
+      - mongodb_test:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongodb_test:
+ 

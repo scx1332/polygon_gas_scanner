@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 import * as Buffer from "buffer";
 import { delay } from "./utils";
 
-const log: Logger = new Logger({ name: "WATCHDOG" });
+const log = new Logger({ name: "WATCHDOG" });
 
 dotenv.config();
 
