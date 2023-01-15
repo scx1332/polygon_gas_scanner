@@ -1,3 +1,3 @@
 REM format typescript
-call tsfmt -r 
+call npm run prettier
 pause
