@@ -1,6 +1,9 @@
 from datetime import datetime
 import os
 import shutil
+from dotenv import load_dotenv
+
+load_dotenv()
 
 mongo_container_name = os.getenv("MONGO_CONTAINER_NAME")
 
