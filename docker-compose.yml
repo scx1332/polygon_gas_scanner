@@ -1,18 +1,18 @@
 version: "3.3"  # optional since v1.27.0
 services:
-  mongodb_container:
+  mongo:
     image: mongo:latest
     container_name: gas_scanner_mongo
     volumes:
-      - mongodb_data_container:/data/db
+      - mongo_vol:/data/db
 
-  gas_scanner_container:
+  scanner:
     build:
       context: ./gas_scanner
       dockerfile: Dockerfile
     environment:
       PROVIDER_ADDRESS: ${PROVIDER_ADDRESS}
-      MONGO_DB_CONNECTION_STRING: mongodb://mongodb_container:27017
+      MONGO_DB_CONNECTION_STRING: mongodb://mongo:27017
       MONGO_DB_NAME: GasUsage
 
       AGGREGATOR_DELAY_START: 60
@@ -34,5 +34,5 @@ services:
       - ${BACKEND_PORT}:7888
 
 volumes:
-  mongodb_data_container:
+  mongo_vol:
  
