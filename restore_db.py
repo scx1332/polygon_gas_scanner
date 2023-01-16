@@ -21,7 +21,7 @@ def run_command(command):
 run_command("docker-compose down")
 run_command("docker-compose up -d mongo")
 run_command(f'docker exec {mongo_container_name} /bin/bash -c "rm -rf /dump"')
-run_command(f'docker cp {input_dir}/dump gas_scanner_mongo:/dump')
+run_command(f'docker cp {input_dir}/dump {mongo_container_name}:/dump')
 run_command(f'docker exec {mongo_container_name} mongorestore')
 run_command(f'docker exec {mongo_container_name} /bin/bash -c "rm -rf /dump"')
 
