@@ -16,14 +16,14 @@ export const collections: {
 } = {};
 
 export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
-    if (process.env.MONGO_DB_CONNECTION_STRING === undefined) {
+    if (!process.env.MONGO_DB_CONNECTION_STRING) {
         throw "process.env.MONGO_DB_CONNECTION_STRING not found";
     }
     const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.MONGO_DB_CONNECTION_STRING);
 
     await client.connect();
 
-    if (process.env.MONGO_DB_NAME === undefined) {
+    if (!process.env.MONGO_DB_NAME) {
         throw "process.env.MONGO_DB_NAME not found";
     }
     const db: mongoDB.Db = client.db(process.env.MONGO_DB_NAME);

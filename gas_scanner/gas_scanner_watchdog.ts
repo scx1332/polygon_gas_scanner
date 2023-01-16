@@ -146,6 +146,13 @@ class Watchdog {
 }
 
 async function main() {
+    if (!process.env.PROVIDER_ADDRESS) {
+        throw "PROVIDER_ADDRESS not set";
+    }
+    if (!process.env.COLD_START_BLOCK) {
+        throw "COLD_START_BLOCK not set";
+    }
+
     await connectToDatabase();
     const after_kill_delay_ms = parseInt(process.env.WATCHDOG_AFTER_KILL_DELAY_MS ?? "2000");
     const after_start_delay = parseInt(process.env.WATCHDOG_AFTER_START_DELAY_MS ?? "30000");
