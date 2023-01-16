@@ -11,6 +11,8 @@ def run_command(command):
     os.system(command)
 
 
+run_command("docker-compose down")
+run_command("docker-compose up -d mongo")
 run_command("docker exec gas_scanner_mongo mongodump")
 run_command("docker cp gas_scanner_mongo:dump .")
 run_command('docker exec gas_scanner_mongo /bin/bash -c "rm -rf ./dump"')
