@@ -12,6 +12,7 @@ services:
       dockerfile: Dockerfile
     environment:
       PROVIDER_ADDRESS: ${PROVIDER_ADDRESS}
+      CHAIN_ID: ${CHAIN_ID}
       MONGO_DB_CONNECTION_STRING: mongodb://mongo:27017
       MONGO_DB_NAME: GasUsage
 
