@@ -419,7 +419,8 @@ app.get("/polygon/transactions/all", async (req, res) => {
     }
 });
 
-connectToDatabase().then(() => {
+const chainId = parseInt(process.env.CHAIN_ID ?? "CHAIN_ID not set");
+connectToDatabase(chainId).then(() => {
     app.listen(PORT, () => {
         console.log("The application is listening " + "on port http://localhost:" + PORT);
     });

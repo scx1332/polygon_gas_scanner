@@ -42,7 +42,8 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
     console.log("Starting gas scanner...");
 
     console.log("Connecting to database...");
-    await connectToDatabase();
+    const chainId = parseInt(process.env.CHAIN_ID ?? "CHAIN_ID not set");
+    await connectToDatabase(chainId);
 
     await clearOldVersionMonitoredAddresses(CURRENT_MONITORED_ADDRESS_VERSION);
     await clearOldVersionERC20TransactionEntries(CURRENT_ERC20_TRANSACTION_VERSION);
@@ -61,7 +62,7 @@ const PROVIDER_ADDRESS = process.env.PROVIDER_ADDRESS as string;
         }
     }
 
-    const p = new ChainGasScanner(PROVIDER_ADDRESS, startingBlockNumber);
+    const p = new ChainGasScanner(PROVIDER_ADDRESS, chainId, startingBlockNumber);
 
     await p.runWorkers();
 

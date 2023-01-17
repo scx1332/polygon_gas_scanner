@@ -15,9 +15,12 @@ export const collections: {
     monitoredAddresses?: mongoDB.Collection;
 } = {};
 
-export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
+export async function connectToDatabase(chainId:number): Promise<mongoDB.MongoClient> {
     if (!process.env.MONGO_DB_CONNECTION_STRING) {
         throw "process.env.MONGO_DB_CONNECTION_STRING not found";
+    }
+    if (!chainId) {
+        throw "Cannot connect to DB - chainId not found";
     }
     const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.MONGO_DB_CONNECTION_STRING);
 
@@ -28,12 +31,12 @@ export async function connectToDatabase(): Promise<mongoDB.MongoClient> {
     }
     const db: mongoDB.Db = client.db(process.env.MONGO_DB_NAME);
 
-    collections.blockInfoCollection = db.collection("BlockInfo");
-    collections.timeFrameInfoCollection = db.collection("TimeFrameInfo");
-    collections.histogramCollection = db.collection("Histograms");
-    collections.timeFrameBlockDataCollection = db.collection("TimeFrameBlockData");
-    collections.erc20Transactions = db.collection("ERC20Transaction");
-    collections.monitoredAddresses = db.collection("MonitoredAddress");
+    collections.blockInfoCollection = db.collection(`BlockInfo_${chainId}`);
+    collections.timeFrameInfoCollection = db.collection(`TimeFrameInfo_${chainId}`);
+    collections.histogramCollection = db.collection(`Histograms_${chainId}`);
+    collections.timeFrameBlockDataCollection = db.collection(`TimeFrameBlockData_${chainId}`);
+    collections.erc20Transactions = db.collection(`ERC20Transaction_${chainId}`);
+    collections.monitoredAddresses = db.collection(`MonitoredAddress_${chainId}`);
 
     await collections.blockInfoCollection.createIndex({ blockNo: 1 }, { unique: true });
     await collections.blockInfoCollection.createIndex({ blockTime: 1 }, { unique: false });

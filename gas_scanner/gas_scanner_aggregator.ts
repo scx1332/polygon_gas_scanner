@@ -16,37 +16,57 @@ import { bignumberToGwei, delay } from "./utils";
 import { MonitoredAddress, RecipientInfo } from "./src/model/MonitoredAddresses";
 import { BigNumber } from "ethers";
 
+
 dotenv.config();
 const log = new Logger({ name: "AGGREGATOR" });
 
+
+const CHAIN_ID = parseInt(process.env.CHAIN_ID ?? "0");
+const MIN_PRIORITY_FEE = parseFloat(process.env.MIN_PRIORITY_FEE ?? "1.0");
+
 function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo) {
-    if (bi.transCount != 0 && bi.minGas >= 1.0) {
-        tfs.blockCount += 1;
-        tfs.gasUsed += bi.gasUsed;
-        tfs.gasLimit += bi.gasLimit;
-        tfs.burnedFees += bi.burnedFees;
-        tfs.totalFees += bi.totalFees;
-        tfs.totalMinGas += bi.minGas;
+    if (bi.transCount == 0 && bi.minGas < 1.0) {
+        bi.minGas = bi.baseFeePrice + MIN_PRIORITY_FEE;
+    }
 
-        if (tfs.firstBlock == 0) {
-            tfs.firstBlock = bi.blockNo;
-        } else if (bi.blockNo < tfs.firstBlock) {
-            tfs.firstBlock = bi.blockNo;
-        }
-        if (bi.blockNo > tfs.lastBlock) {
-            tfs.lastBlock = bi.blockNo;
-        }
+    tfs.blockCount += 1;
+    tfs.gasUsed += bi.gasUsed;
+    tfs.gasLimit += bi.gasLimit;
+    tfs.burnedFees += bi.burnedFees;
+    tfs.totalFees += bi.totalFees;
+    tfs.totalMinGas += bi.minGas;
 
-        tfs.transCount += bi.transCount;
-        if (tfs.minGas == 0.0) {
-            tfs.minGas = bi.minGas;
-        }
+    if (tfs.firstBlock == 0) {
+        tfs.firstBlock = bi.blockNo;
+    } else if (bi.blockNo < tfs.firstBlock) {
+        tfs.firstBlock = bi.blockNo;
+    }
+    if (bi.blockNo > tfs.lastBlock) {
+        tfs.lastBlock = bi.blockNo;
+    }
+
+    tfs.transCount += bi.transCount;
+    if (tfs.minGas == 0.0) {
+        tfs.minGas = bi.minGas;
+    }
+    if (bi.transCount > 0) {
         if (bi.minGas < tfs.minGas) {
             tfs.minGas = bi.minGas;
         }
-        if (bi.minGas > tfs.maxMinGas) {
-            tfs.maxMinGas = bi.minGas;
+    } else if (bi.transCount == 0) {
+        if (CHAIN_ID == 137) {
+            //on Polygon ignore empty blocks as they are errors in block generation and no transaction can fit there
         }
+        else if (bi.minGas < tfs.minGas) {
+            //we are assuming that empty block can fit transaction
+            tfs.minGas = bi.minGas;
+        }
+    }
+
+
+
+    if (bi.minGas > tfs.maxMinGas) {
+        tfs.maxMinGas = bi.minGas;
     }
 }
 
@@ -119,7 +139,8 @@ async function main() {
 
     log.info("Connecting to database...");
 
-    await connectToDatabase();
+    const chainID = parseInt(process.env.CHAIN_ID ?? "CHAIN_ID not set");
+    await connectToDatabase(chainID);
 
     const aggregator_delay_seconds = parseInt(process.env.AGGREGATOR_DELAY_SECONDS ?? "60");
     const aggregator_delay_start = parseInt(process.env.AGGREGATOR_DELAY_START ?? "60");

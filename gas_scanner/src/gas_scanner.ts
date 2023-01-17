@@ -18,6 +18,8 @@ import { TransactionERC20Entry } from "./model/TransactionEntry";
 import { MonitoredAddress } from "./model/MonitoredAddresses";
 
 const ERC20interface = new ethers.utils.Interface(IERC20_abi);
+const CHAIN_ID = parseInt(process.env.CHAIN_ID ?? "0");
+const MIN_PRIORITY_FEE = parseFloat(process.env.MIN_PRIORITY_FEE ?? "1.0");
 
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
@@ -36,13 +38,18 @@ export class ChainGasScanner {
     startingBlockNumber = 0;
     blockNumber = 0;
     blockTime = "";
+    chainId = 0;
 
     monitoredAddresses = new Map<string, MonitoredAddress>();
 
-    constructor(providerRpcAddress: string, startingBlock: number) {
+    constructor(providerRpcAddress: string, chainId: number, startingBlock: number) {
         this.blockProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
+        this.blockProvider.getNetwork().then((network) => {
+            console.log("Connected to network " + network.chainId);
+        });
         this.transactionsProvider = new ethers.providers.JsonRpcBatchProvider(providerRpcAddress);
         this.startingBlockNumber = startingBlock;
+        this.chainId = chainId;
     }
 
     async loadMonitoredAddresses() {
@@ -73,22 +80,32 @@ export class ChainGasScanner {
             const bi = this.blockMap.get(blockNo);
 
             if (bi !== undefined) {
+                if (bi.transCount == 0 && bi.minGas < 1.0) {
+                    bi.minGas = bi.baseFeePrice + MIN_PRIORITY_FEE;
+                }
+
                 if (tfs.firstBlockTime == "") {
                     tfs.firstBlockTime = bi.blockTime;
                 }
                 tfs.lastBlockTime = bi.blockTime;
                 tfs.blockCount += 1;
-                if (bi.transCount != 0) {
-                    tfs.transCount += bi.transCount;
-                    if (tfs.minGas == 0.0) {
-                        tfs.minGas = bi.minGas;
-                    }
+                if (bi.transCount > 0) {
                     if (bi.minGas < tfs.minGas) {
                         tfs.minGas = bi.minGas;
                     }
-                    if (bi.minGas > tfs.maxMinGas) {
-                        tfs.maxMinGas = bi.minGas;
+                } else if (bi.transCount == 0) {
+                    if (CHAIN_ID == 137) {
+                        //on Polygon ignore empty blocks as they are errors in block generation and no transaction can fit there
                     }
+                    else if (bi.minGas < tfs.minGas) {
+                        //we are assuming that empty block can fit transaction
+                        tfs.minGas = bi.minGas;
+                    }
+                }
+                tfs.transCount += bi.transCount;
+
+                if (bi.minGas > tfs.maxMinGas) {
+                    tfs.maxMinGas = bi.minGas;
                 }
             }
         }
@@ -383,6 +400,11 @@ export class ChainGasScanner {
     }
 
     async runWorkers() {
+        const network = await this.blockProvider.getNetwork();
+        if (network.chainId != this.chainId) {
+            throw new Error(`Invalid network ${network.chainId} != ${this.chainId}`);
+        }
+
         await this.loadMonitoredAddresses();
         this.workerProcessTransactions = this.processTransactions();
         this.workerGetBlocks = this.getBlocksWorker();

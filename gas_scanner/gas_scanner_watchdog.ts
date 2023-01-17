@@ -152,8 +152,9 @@ async function main() {
     if (!process.env.COLD_START_BLOCK) {
         throw "COLD_START_BLOCK not set";
     }
+    const chainId = parseInt(process.env.CHAIN_ID ?? "CHAIN_ID not set");
 
-    await connectToDatabase();
+    await connectToDatabase(chainId);
     const after_kill_delay_ms = parseInt(process.env.WATCHDOG_AFTER_KILL_DELAY_MS ?? "2000");
     const after_start_delay = parseInt(process.env.WATCHDOG_AFTER_START_DELAY_MS ?? "30000");
     const allowed_seconds_behind = parseInt(process.env.WATCHDOG_ALLOWED_SECONDS_BEHIND ?? "60");
