@@ -96,8 +96,7 @@ export class ChainGasScanner {
                 } else if (bi.transCount == 0) {
                     if (CHAIN_ID == 137) {
                         //on Polygon ignore empty blocks as they are errors in block generation and no transaction can fit there
-                    }
-                    else if (bi.minGas < tfs.minGas) {
+                    } else if (bi.minGas < tfs.minGas) {
                         //we are assuming that empty block can fit transaction
                         tfs.minGas = bi.minGas;
                     }
@@ -357,12 +356,12 @@ export class ChainGasScanner {
 
         //if (transferCount >= 2 && transferCount <= 3) {
         //    for (const address in addresses) {
-                //console.log(address);
+        //console.log(address);
         //    }
         //}
         //if (transferCount >= 2 && transferCount <= 3) {
         //    for (const address in addresses) {
-                //console.log(address);
+        //console.log(address);
         //    }
         //}
     }

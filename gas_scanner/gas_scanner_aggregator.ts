@@ -16,10 +16,8 @@ import { bignumberToGwei, delay } from "./utils";
 import { MonitoredAddress, RecipientInfo } from "./src/model/MonitoredAddresses";
 import { BigNumber } from "ethers";
 
-
 dotenv.config();
 const log = new Logger({ name: "AGGREGATOR" });
-
 
 const CHAIN_ID = parseInt(process.env.CHAIN_ID ?? "0");
 const MIN_PRIORITY_FEE = parseFloat(process.env.MIN_PRIORITY_FEE ?? "1.0");
@@ -56,8 +54,7 @@ function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo
     } else if (bi.transCount == 0) {
         if (CHAIN_ID == 137) {
             //on Polygon ignore empty blocks as they are errors in block generation and no transaction can fit there
-        }
-        else if (bi.minGas < tfs.minGas) {
+        } else if (bi.minGas < tfs.minGas) {
             //we are assuming that empty block can fit transaction
             tfs.minGas = bi.minGas;
         }
@@ -164,7 +161,7 @@ async function main() {
     log.info(`Clearing database form old version entries...`);
     await clearOldVersionTimeFrameEntries(CURRENT_TIME_FRAME_BLOCK_VERSION);
 
-    for(;;) {
+    for (;;) {
         const params = [
             {
                 timeFrameUnit: "minutes",

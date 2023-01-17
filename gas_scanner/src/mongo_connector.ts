@@ -15,7 +15,7 @@ export const collections: {
     monitoredAddresses?: mongoDB.Collection;
 } = {};
 
-export async function connectToDatabase(chainId:number): Promise<mongoDB.MongoClient> {
+export async function connectToDatabase(chainId: number): Promise<mongoDB.MongoClient> {
     if (!process.env.MONGO_DB_CONNECTION_STRING) {
         throw "process.env.MONGO_DB_CONNECTION_STRING not found";
     }
@@ -264,7 +264,9 @@ export async function clearDatabase() {
 export async function getERC20TransactionsNewerThan(minDate: Date): Promise<Array<TransactionERC20Entry>> {
     const array = new Array<TransactionERC20Entry>();
     if (collections.erc20Transactions !== undefined) {
-        const result = await collections.erc20Transactions.find({ datetime: { $gte: minDate.toISOString() } }).toArray();
+        const result = await collections.erc20Transactions
+            .find({ datetime: { $gte: minDate.toISOString() } })
+            .toArray();
         for (const res of result) {
             array.push(Object.assign(new TransactionERC20Entry(), res));
         }
