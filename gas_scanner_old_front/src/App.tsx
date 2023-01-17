@@ -133,29 +133,29 @@ export class App extends React.Component<AppProps> {
 
           </Flex>
             {this.state.page == "main" &&
-              <Flex direction="column" shrink="0">
-                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between"
+              <Flex direction="column">
+                <Flex direction="row" flex={1} alignItems="stretch" justifyContent="space-between"
                       gridGap="5">
                   <GasChart></GasChart>
                   <GasChart></GasChart>
                 </Flex>
-                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                <Flex direction="row" flex={1} alignItems="stretch" justifyContent="space-between" gridGap="5">
                   <SuggestedGasComponent></SuggestedGasComponent>
 
                 </Flex>
-                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                <Flex direction="row" flex={1} alignItems="stretch" justifyContent="space-between" gridGap="5">
                   <AddressListComponent></AddressListComponent>
 
                 </Flex>
 
-                <Flex direction="row" flex={1} shrink="0" alignItems="stretch" justifyContent="space-between" gridGap="5">
+                <Flex direction="row" flex={1} alignItems="stretch" justifyContent="space-between" gridGap="5">
                   <BlockListComponent></BlockListComponent>
 
                 </Flex>
               </Flex>
             }
             {this.state.page == "about" &&
-              <Flex direction="column" shrink="0">
+              <Flex direction="column">
                 About
               </Flex>
             }
