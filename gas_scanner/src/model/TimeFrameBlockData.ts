@@ -14,5 +14,7 @@ export class TimeFrameBlockData {
     totalFees = 0;
     burnedFees = 0;
     totalMinGas = 0;
+    minBaseFee = 0;
+    minPriorityFee = 0;
     version = CURRENT_TIME_FRAME_BLOCK_VERSION;
 }

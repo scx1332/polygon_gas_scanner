@@ -62,8 +62,20 @@ function mergeBlockIntoTimeFrameBlockData(tfs: TimeFrameBlockData, bi: BlockInfo
             tfs.minGas = bi.minGas;
         }
     }
+    if (tfs.minBaseFee == 0 || bi.baseFeePrice < tfs.minBaseFee) {
+        tfs.minBaseFee = bi.baseFeePrice;
+    }
+    let blockMinPriorityFee = bi.baseFeePrice - bi.minGas;
+    if (CHAIN_ID != 137) {
+        //if block is less than 80% full we can safely assume that min priority fee is 1.0
+        if (bi.transCount > 0 && bi.gasUsed < 0.8 * bi.gasLimit) {
+            blockMinPriorityFee = 1.0;
+        }
+    }
 
-
+    if (tfs.minPriorityFee == 0 || blockMinPriorityFee < tfs.minPriorityFee) {
+        tfs.minPriorityFee = blockMinPriorityFee;
+    }
 
     if (bi.minGas > tfs.maxMinGas) {
         tfs.maxMinGas = bi.minGas;

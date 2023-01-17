@@ -83,6 +83,7 @@ class GasChartState {
 }
 
 
+
 export class GasChart extends React.Component {
     state : GasChartState;
 
@@ -114,6 +115,9 @@ export class GasChart extends React.Component {
     private getPassiveColor() {
         return "#705E78";
     }
+    private getEmptyColor() {
+        return "#888888";
+    }
 
     private updateChartPrivate() {
         if (this.isChartLive() && this.lastResult) {
@@ -134,24 +138,60 @@ export class GasChart extends React.Component {
         let minGasArray = [];
         let backgroundColors = [];
         let blockData = blockListProviderResult.blockData;
-
+        const CHAIN_ID = parseInt(process.env.REACT_APP_CHAIN_ID || "1");
         for (let blockEntry of blockData.slice(blockData.length - this.state.numberOnChart)) {
             labels.push(blockEntry.blockNo);
-            if (this.state.displayMode == "total_fee") {
-                minGasArray.push(blockEntry.minGas);
-            }
-            if (this.state.displayMode == "base_fee") {
-                minGasArray.push(blockEntry.baseFeePrice);
-            }
-            if (this.state.displayMode == "priority_fee") {
-                minGasArray.push(blockEntry.minGas - blockEntry.baseFeePrice);
-            }
-
-
-            if (blockEntry.gasUsed / blockEntry.gasLimit < 0.51) {
-                backgroundColors.push(this.getPassiveColor());
+            if (blockEntry.transCount == 0) {
+                if (CHAIN_ID == 137) {
+                    if (this.state.displayMode == "total_fee") {
+                        minGasArray.push(blockEntry.baseFeePrice + 30);
+                    }
+                    if (this.state.displayMode == "base_fee") {
+                        minGasArray.push(blockEntry.baseFeePrice);
+                    }
+                    if (this.state.displayMode == "priority_fee") {
+                        minGasArray.push(30);
+                    }
+                } else {
+                    if (this.state.displayMode == "total_fee") {
+                        minGasArray.push(blockEntry.baseFeePrice + 1.0);
+                    }
+                    if (this.state.displayMode == "base_fee") {
+                        minGasArray.push(blockEntry.baseFeePrice);
+                    }
+                    if (this.state.displayMode == "priority_fee") {
+                        minGasArray.push(1.0);
+                    }
+                }
             } else {
-                backgroundColors.push(this.getActiveColor());
+                if (this.state.displayMode == "total_fee") {
+                    minGasArray.push(blockEntry.minGas);
+                }
+                if (this.state.displayMode == "base_fee") {
+                    minGasArray.push(blockEntry.baseFeePrice);
+                }
+                if (this.state.displayMode == "priority_fee") {
+                    if (CHAIN_ID != 137) {
+                        if (blockEntry.gasUsed / blockEntry.gasLimit < 0.8) {
+                            minGasArray.push(1.0);
+                        } else {
+                            minGasArray.push(blockEntry.minGas - blockEntry.baseFeePrice);
+                        }
+                    } else {
+                        minGasArray.push(blockEntry.minGas - blockEntry.baseFeePrice);
+                    }
+                }
+            }
+
+            if (blockEntry.transCount == 0) {
+                backgroundColors.push(this.getEmptyColor());
+            } else {
+                if (blockEntry.gasUsed / blockEntry.gasLimit < 0.55) {
+                    backgroundColors.push(this.getPassiveColor());
+                } else {
+                    backgroundColors.push(this.getActiveColor());
+                }
+
             }
         }
         let datasets = [
@@ -259,11 +299,15 @@ export class GasChart extends React.Component {
             <Flex flexDirection="column" gridGap="0">
                 <Flex flexDirection="row" gridGap="2">
                     <Flex alignSelf="center" backgroundColor={this.getActiveColor()} width="20px" height="10px"></Flex>
-                    <Text fontSize="12px" alignSelf="center">Gas usage over 50%</Text>
+                    <Text fontSize="12px" alignSelf="center">Gas usage over 55%</Text>
                 </Flex>
                 <Flex flexDirection="row" gridGap="2">
                     <Flex alignSelf="center" backgroundColor={this.getPassiveColor()} width="20px" height="10px"></Flex>
-                    <Text fontSize="12px" alignSelf="center">Gas usage under 50%</Text>
+                    <Text fontSize="12px" alignSelf="center">Gas usage under 55%</Text>
+                </Flex>
+                <Flex flexDirection="row" gridGap="2">
+                    <Flex alignSelf="center" backgroundColor={this.getEmptyColor()} width="20px" height="10px"></Flex>
+                    <Text fontSize="12px" alignSelf="center">Empty block</Text>
                 </Flex>
             </Flex>
         );
