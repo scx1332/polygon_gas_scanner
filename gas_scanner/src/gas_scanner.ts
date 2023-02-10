@@ -20,6 +20,7 @@ import { MonitoredAddress } from "./model/MonitoredAddresses";
 const ERC20interface = new ethers.utils.Interface(IERC20_abi);
 const CHAIN_ID = parseInt(process.env.CHAIN_ID ?? "0");
 const MIN_PRIORITY_FEE = parseFloat(process.env.MIN_PRIORITY_FEE ?? "1.0");
+const BLOCK_PRODUCED_EVERY_MS = parseInt(process.env.BLOCK_PRODUCED_EVERY_MS ?? "5000");
 
 export class ChainGasScanner {
     blockMap = new Map<number, BlockInfo>();
@@ -149,7 +150,7 @@ export class ChainGasScanner {
                 this.chainScannerStatus.lastUpdate = new Date().toISOString();
                 if (block == null) {
                     //console.log("Too fast, no block info yet");
-                    await delay(300);
+                    await delay(BLOCK_PRODUCED_EVERY_MS);
                     continue;
                 }
 
