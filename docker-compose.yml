@@ -4,7 +4,7 @@ services:
     image: mongo:latest
     container_name: ${MONGO_CONTAINER_NAME}
     volumes:
-      - mongo_vol:/data/db
+      - ./mongo_data:/data/db
 
   scanner:
     build:
@@ -34,6 +34,3 @@ services:
     ports:
       - ${BACKEND_PORT}:7888
 
-volumes:
-  mongo_vol:
- 
